@@ -24,8 +24,8 @@ resource "google_compute_subnetwork" "subnet" {
   project = var.project_id
 }
 
-resource "google_compute_firewall" "allow_ssh" {
-  name    = "${var.network_name}-allow-ssh"
+resource "google_compute_firewall" "allow_ssh_vpn_only" {
+  name    = "${var.network_name}-allow-ssh-vpn-only"
   network = google_compute_network.vpc_network.name
   
   allow {
@@ -33,8 +33,27 @@ resource "google_compute_firewall" "allow_ssh" {
     ports    = ["22"]
   }
   
-  source_ranges = var.allowed_ssh_ips
-  target_tags   = ["ssh-allowed"]
+  # Only allow SSH from VPN clients and specific admin IPs
+  source_ranges = concat(
+    ["10.8.0.0/24"],  # VPN client subnet
+    var.allowed_ssh_ips
+  )
+  target_tags = ["ssh-allowed"]
+  
+  project = var.project_id
+}
+
+resource "google_compute_firewall" "allow_vpn_server" {
+  name    = "${var.network_name}-allow-vpn"
+  network = google_compute_network.vpc_network.name
+  
+  allow {
+    protocol = "udp"
+    ports    = ["1194"]
+  }
+  
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["vpn-server"]
   
   project = var.project_id
 }
@@ -54,11 +73,12 @@ resource "google_compute_firewall" "allow_http_https" {
   project = var.project_id
 }
 
-resource "google_compute_firewall" "allow_odoo" {
-  name    = "${var.network_name}-allow-odoo"
-  network = google_compute_network.vpc_network.name
+resource "google_compute_firewall" "deny_direct_odoo_access" {
+  name     = "${var.network_name}-deny-direct-odoo"
+  network  = google_compute_network.vpc_network.name
+  priority = 1000
   
-  allow {
+  deny {
     protocol = "tcp"
     ports    = ["8069", "8072"]
   }
@@ -78,7 +98,8 @@ resource "google_compute_firewall" "allow_internal_postgres" {
     ports    = ["5432", "6432"]
   }
   
-  source_ranges = [var.subnet_cidr]
+  # Allow from internal subnet and VPN clients
+  source_ranges = [var.subnet_cidr, "10.8.0.0/24"]
   target_tags   = ["postgresql-server"]
   
   project = var.project_id
@@ -93,7 +114,8 @@ resource "google_compute_firewall" "allow_internal_redis" {
     ports    = ["6379"]
   }
   
-  source_ranges = [var.subnet_cidr]
+  # Allow from internal subnet and VPN clients
+  source_ranges = [var.subnet_cidr, "10.8.0.0/24"]
   target_tags   = ["redis-server"]
   
   project = var.project_id
@@ -117,7 +139,8 @@ resource "google_compute_firewall" "allow_internal" {
     ports    = ["0-65535"]
   }
   
-  source_ranges = [var.subnet_cidr]
+  # Allow from internal subnet and VPN clients
+  source_ranges = [var.subnet_cidr, "10.8.0.0/24"]
   
   project = var.project_id
 }

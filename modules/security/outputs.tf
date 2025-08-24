@@ -28,6 +28,16 @@ output "monitoring_service_account_id" {
   value       = google_service_account.monitoring_service_account.id
 }
 
+output "vpn_service_account_email" {
+  description = "Email of the VPN service account"
+  value       = google_service_account.vpn_service_account.email
+}
+
+output "vpn_service_account_id" {
+  description = "ID of the VPN service account"
+  value       = google_service_account.vpn_service_account.id
+}
+
 output "kms_keyring_id" {
   description = "ID of the KMS keyring (production only)"
   value       = var.environment == "production" ? google_kms_key_ring.odoo_keyring[0].id : ""

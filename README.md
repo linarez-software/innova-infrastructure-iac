@@ -4,7 +4,7 @@ Terraform infrastructure for deploying **Odoo v18 ERP Platform** on **Google Clo
 
 ## 🏗️ Architecture Overview
 
-This project provides a complete IaC solution for deploying Odoo v18 with two distinct environments:
+This project provides a complete IaC solution for deploying Odoo v18 with **secure VPN-only access** and two distinct environments:
 
 ### Staging Environment
 - **Single VM deployment** (e2-standard-2: 2 vCPUs, 8 GB RAM)
@@ -19,6 +19,12 @@ This project provides a complete IaC solution for deploying Odoo v18 with two di
 - **7 Odoo workers** optimized for 30 concurrent users
 - Redis caching, PgBouncer connection pooling
 - NGINX reverse proxy with SSL/TLS
+
+### Security Architecture
+- **OpenVPN Server**: e2-micro instance for secure admin access
+- **Zero External Access**: SSH and database access only via VPN
+- **5 VPN Users Maximum**: Cost-optimized for small teams
+- **Public Access**: Only HTTPS (443) and HTTP (80) for Odoo web interface
 
 ## 🚀 Quick Start
 
@@ -71,6 +77,7 @@ terraform apply
 | **Staging** | All-in-one | e2-standard-2 | 2 | 8 GB | 20 GB SSD | Development |
 | **Production** | Odoo Server | c4-standard-4-lssd | 4 | 15 GB | 30 GB + Local SSD | 30 users |
 | **Production** | Database | n2-highmem-4 | 4 | 32 GB | 100 GB SSD | Dedicated DB |
+| **Both** | VPN Server | e2-micro | 1 | 1 GB | 10 GB Standard | 5 VPN users |
 
 ## ⚡ Performance Optimization
 
@@ -129,9 +136,11 @@ db_password                  = "strong-db-password"
 
 ### Network Security
 - **VPC with custom subnets** and firewall rules
-- **SSH access restriction** to specified IP ranges
+- **VPN-only SSH access** (10.8.0.0/24 subnet)
+- **No external admin access** except via VPN
 - **Internal-only** database communication (port 5432)
 - **SSL/TLS encryption** with Let's Encrypt
+- **OpenVPN server** with certificate-based authentication
 
 ### Access Control
 - **Service accounts** with least-privilege IAM roles
@@ -165,16 +174,17 @@ db_password                  = "strong-db-password"
 
 ### Monthly Cost Estimates (us-central1)
 
-| Environment | Instance Cost | Storage Cost | Network Cost | Total Est. |
-|-------------|---------------|--------------|--------------|------------|
-| **Staging** | ~$50 | ~$5 | ~$5 | **~$60/month** |
-| **Production** | ~$180 | ~$25 | ~$10 | **~$215/month** |
+| Environment | Instance Cost | Storage Cost | Network Cost | VPN Cost | Total Est. |
+|-------------|---------------|--------------|--------------|----------|------------|
+| **Staging** | ~$50 | ~$5 | ~$5 | ~$9 | **~$69/month** |
+| **Production** | ~$180 | ~$25 | ~$10 | ~$9 | **~$224/month** |
 
-*Estimates based on 24/7 usage. Actual costs may vary based on usage patterns.*
+*Estimates include VPN server (e2-micro) and static IP. Actual costs may vary based on usage patterns.*
 
 ## 📚 Documentation
 
 - **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Detailed deployment guide
+- **[VPN-ACCESS.md](docs/VPN-ACCESS.md)** - VPN setup and user management
 - **[SECURITY.md](docs/SECURITY.md)** - Security best practices  
 - **[MONITORING.md](docs/MONITORING.md)** - Monitoring setup
 - **[BACKUP.md](docs/BACKUP.md)** - Backup and disaster recovery
@@ -183,9 +193,14 @@ db_password                  = "strong-db-password"
 ## 🔍 Useful Commands
 
 ```bash
-# SSH to instances
+# Setup VPN access (REQUIRED for SSH)
+./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production add username
+./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production list
+
+# SSH to instances (VPN connection required)
 gcloud compute ssh odoo-production --zone=us-central1-a
 gcloud compute ssh db-production --zone=us-central1-a
+gcloud compute ssh vpn-production --zone=us-central1-a
 
 # View logs  
 journalctl -u odoo -f
@@ -207,6 +222,8 @@ systemctl status nginx
 ✅ **Production-ready** architecture with dual VM setup  
 ✅ **Performance optimized** for 30 concurrent users  
 ✅ **Cost-effective** staging environment  
+✅ **Secure VPN access** with OpenVPN server (5 users)
+✅ **Zero external admin access** except Odoo web interface
 ✅ **Automated SSL** with Let's Encrypt  
 ✅ **Local SSD** for high-performance I/O  
 ✅ **Connection pooling** with PgBouncer  

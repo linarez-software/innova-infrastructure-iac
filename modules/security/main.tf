@@ -22,6 +22,14 @@ resource "google_service_account" "monitoring_service_account" {
   project = var.project_id
 }
 
+resource "google_service_account" "vpn_service_account" {
+  account_id   = "vpn-${var.environment}-sa"
+  display_name = "VPN ${var.environment} Service Account"
+  description  = "Service account for VPN server in ${var.environment}"
+  
+  project = var.project_id
+}
+
 resource "google_project_iam_member" "odoo_compute_instance_admin" {
   project = var.project_id
   role    = "roles/compute.instanceAdmin"
@@ -116,6 +124,36 @@ resource "google_project_iam_member" "monitoring_log_viewer" {
   project = var.project_id
   role    = "roles/logging.viewer"
   member  = "serviceAccount:${google_service_account.monitoring_service_account.email}"
+}
+
+resource "google_project_iam_member" "vpn_compute_instance_admin" {
+  project = var.project_id
+  role    = "roles/compute.instanceAdmin"
+  member  = "serviceAccount:${google_service_account.vpn_service_account.email}"
+}
+
+resource "google_project_iam_member" "vpn_service_account_user" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.vpn_service_account.email}"
+}
+
+resource "google_project_iam_member" "vpn_log_writer" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.vpn_service_account.email}"
+}
+
+resource "google_project_iam_member" "vpn_metric_writer" {
+  project = var.project_id
+  role    = "roles/monitoring.metricWriter"
+  member  = "serviceAccount:${google_service_account.vpn_service_account.email}"
+}
+
+resource "google_project_iam_member" "vpn_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.admin"
+  member  = "serviceAccount:${google_service_account.vpn_service_account.email}"
 }
 
 resource "google_kms_key_ring" "odoo_keyring" {

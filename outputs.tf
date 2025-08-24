@@ -38,12 +38,28 @@ output "subnet_name" {
   value       = module.networking.subnet_name
 }
 
+output "vpn_server_ip" {
+  description = "External IP address of the VPN server"
+  value       = module.vpn.vpn_external_ip
+}
+
+output "vpn_connection_info" {
+  description = "VPN connection information"
+  value       = module.vpn.vpn_connection_info
+}
+
+output "ssh_command_vpn" {
+  description = "SSH command to connect to VPN server"
+  value       = "gcloud compute ssh ${module.vpn.vpn_instance_name} --zone=${var.zone} --project=${var.project_id}"
+}
+
 output "service_accounts" {
   description = "Service account emails created"
   value = {
     odoo       = module.security.odoo_service_account_email
     database   = module.security.db_service_account_email
     monitoring = module.security.monitoring_service_account_email
+    vpn        = module.security.vpn_service_account_email
   }
 }
 

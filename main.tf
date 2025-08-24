@@ -98,6 +98,28 @@ module "database" {
   depends_on = [module.compute]
 }
 
+module "vpn" {
+  source = "./modules/vpn"
+  
+  project_id                = var.project_id
+  region                    = var.region
+  zone                      = var.zone
+  environment               = var.environment
+  network_id                = module.networking.network_id
+  subnet_id                 = module.networking.subnet_id
+  vpn_service_account_email = module.security.vpn_service_account_email
+  vpn_admin_email           = var.ssl_email
+  vpn_instance_type         = "e2-micro"
+  vpn_subnet_cidr           = "10.8.0.0/24"
+  max_vpn_clients           = 5
+  labels                    = local.common_labels
+  
+  depends_on = [
+    module.networking,
+    module.security
+  ]
+}
+
 module "monitoring" {
   source = "./modules/monitoring"
   

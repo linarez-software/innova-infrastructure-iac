@@ -41,9 +41,10 @@ output "static_ip_address" {
 output "firewall_rules" {
   description = "List of firewall rules created"
   value = [
-    google_compute_firewall.allow_ssh.name,
+    google_compute_firewall.allow_ssh_vpn_only.name,
+    google_compute_firewall.allow_vpn_server.name,
     google_compute_firewall.allow_http_https.name,
-    google_compute_firewall.allow_odoo.name,
+    google_compute_firewall.deny_direct_odoo_access.name,
     google_compute_firewall.allow_internal_postgres.name,
     google_compute_firewall.allow_internal_redis.name,
     google_compute_firewall.allow_internal.name,
