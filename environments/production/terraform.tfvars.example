@@ -1,0 +1,46 @@
+# GCP Project Configuration
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+zone       = "us-central1-a"
+
+# Production Instance Configuration
+# Optimized for 30 concurrent users
+production_odoo_instance_type = "c4-standard-4-lssd"  # 4 vCPUs, 15 GB RAM + Local SSD
+production_db_instance_type   = "n2-highmem-4"        # 4 vCPUs, 32 GB RAM
+
+# Network Security (IMPORTANT: Restrict SSH access)
+allowed_ssh_ips = [
+  "203.0.113.0/24",  # Your office IP range
+  "198.51.100.0/24"  # Your home IP range
+]
+
+# Domain and SSL Configuration (REQUIRED for production)
+domain_name = "your-domain.com"      # Your production domain
+ssl_email   = "admin@your-domain.com"  # Email for Let's Encrypt
+
+# Odoo Configuration (CHANGE THESE PASSWORDS!)
+odoo_admin_passwd = "YourSecureOdooPassword123!"  # Min 12 characters
+db_password       = "YourSecureDBPassword123!"    # Min 12 characters
+
+# Performance Configuration
+odoo_workers = 7  # Optimized for c4-standard-4-lssd (4 vCPUs)
+
+# Application Versions
+odoo_version       = "18.0"
+postgresql_version = "15"
+
+# Production Features
+enable_monitoring     = true  # Required for production monitoring
+enable_backups       = true  # Required for data protection
+backup_retention_days = 30   # 30-day backup retention
+
+# Resource Labels
+labels = {
+  managed_by   = "terraform"
+  platform     = "odoo"
+  version      = "v18"
+  environment  = "production"
+  team         = "ops"
+  cost_center  = "operations"
+  backup_tier  = "critical"
+}

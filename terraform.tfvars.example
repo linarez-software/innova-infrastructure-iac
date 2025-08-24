@@ -1,0 +1,46 @@
+# Root Configuration Example
+# This file shows the main configuration options available
+# For environment-specific configurations, see environments/{staging,production}/terraform.tfvars.example
+
+# GCP Project Configuration
+project_id = "your-gcp-project-id"
+region     = "us-central1" 
+zone       = "us-central1-a"
+
+# Environment Selection (staging or production)
+environment = "staging"  # Change to "production" for prod deployment
+
+# Instance Types
+staging_instance_type         = "e2-standard-2"      # 2 vCPUs, 8 GB RAM
+production_odoo_instance_type = "c4-standard-4-lssd" # 4 vCPUs, 15 GB RAM + Local SSD  
+production_db_instance_type   = "n2-highmem-4"       # 4 vCPUs, 32 GB RAM
+
+# Network Security
+allowed_ssh_ips = [
+  "0.0.0.0/0"  # Change to your specific IP ranges for security
+]
+
+# Domain and SSL Configuration
+domain_name = ""  # Optional: your domain name
+ssl_email   = ""  # Required if domain_name is set
+
+# Application Credentials (CHANGE THESE!)
+odoo_admin_passwd = "changeme-admin-password"
+db_password       = "changeme-db-password"
+
+# Application Configuration
+odoo_version       = "18.0"
+postgresql_version = "15"
+odoo_workers       = 7  # Optimized for production c4-standard-4-lssd
+
+# Features
+enable_monitoring     = true
+enable_backups       = true
+backup_retention_days = 30
+
+# Resource Labels
+labels = {
+  managed_by = "terraform"
+  platform   = "odoo" 
+  version    = "v18"
+}

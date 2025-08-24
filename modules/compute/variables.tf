@@ -1,0 +1,105 @@
+variable "project_id" {
+  description = "The GCP project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "The GCP region"
+  type        = string
+}
+
+variable "zone" {
+  description = "The GCP zone"
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+}
+
+variable "network_id" {
+  description = "Network ID"
+  type        = string
+}
+
+variable "subnet_id" {
+  description = "Subnet ID"
+  type        = string
+}
+
+variable "staging_instance_type" {
+  description = "Instance type for staging"
+  type        = string
+  default     = "e2-standard-2"
+}
+
+variable "production_odoo_instance_type" {
+  description = "Instance type for production Odoo"
+  type        = string
+  default     = "c4-standard-4-lssd"
+}
+
+variable "production_db_instance_type" {
+  description = "Instance type for production database"
+  type        = string
+  default     = "n2-highmem-4"
+}
+
+variable "odoo_service_account_email" {
+  description = "Service account email for Odoo"
+  type        = string
+}
+
+variable "db_service_account_email" {
+  description = "Service account email for database"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "Domain name for Odoo"
+  type        = string
+  default     = ""
+}
+
+variable "ssl_email" {
+  description = "Email for SSL certificates"
+  type        = string
+  default     = ""
+}
+
+variable "odoo_admin_passwd" {
+  description = "Odoo admin password"
+  type        = string
+  sensitive   = true
+}
+
+variable "db_password" {
+  description = "Database password"
+  type        = string
+  sensitive   = true
+}
+
+variable "odoo_version" {
+  description = "Odoo version"
+  type        = string
+  default     = "18.0"
+}
+
+variable "postgresql_version" {
+  description = "PostgreSQL version"
+  type        = string
+  default     = "15"
+}
+
+variable "odoo_workers" {
+  description = "Number of Odoo workers"
+  type        = number
+  default     = 7
+}
+
+variable "labels" {
+  description = "Labels to apply"
+  type        = map(string)
+  default     = {}
+}

@@ -1,0 +1,38 @@
+# GCP Project Configuration
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+zone       = "us-central1-a"
+
+# Instance Configuration
+staging_instance_type = "e2-standard-2"  # 2 vCPUs, 8 GB RAM - cost-optimized
+
+# Network Security
+allowed_ssh_ips = [
+  "0.0.0.0/0"  # Allow SSH from anywhere (change to your IP range for security)
+]
+
+# Domain and SSL Configuration (optional)
+domain_name = ""  # Leave empty to use IP address
+ssl_email   = ""  # Required if domain_name is set
+
+# Odoo Configuration
+odoo_admin_passwd = "your-secure-admin-password"  # Change this!
+db_password       = "your-secure-db-password"     # Change this!
+
+# Application Versions
+odoo_version       = "18.0"
+postgresql_version = "15"
+
+# Monitoring and Backup
+enable_monitoring = true
+enable_backups    = false  # Disabled for staging to save costs
+
+# Resource Labels
+labels = {
+  managed_by  = "terraform"
+  platform    = "odoo"
+  version     = "v18"
+  environment = "staging"
+  team        = "dev"
+  cost_center = "development"
+}

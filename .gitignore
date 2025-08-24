@@ -1,0 +1,89 @@
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!*.tfvars.example
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.d/
+crash.log
+crash.*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Backup files
+*.backup
+*.bak
+
+# Temporary files
+*.tmp
+*.temp
+
+# Keys and certificates
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+
+# Local configuration overrides
+local.tf
+*_override.tf
+override.tf
+
+# Terraform provider cache
+.terraform.d/
+
+# Ignore Mac specific files
+**/.DS_Store
+
+# Ignore temporary editor files
+**/*~
+**/*.swp
+**/*.swo
+
+# Ignore generated documentation
+docs/_build/
+docs/site/
+
+# Ignore test files
+test/
+tests/
+
+# Ignore scripts logs
+scripts/*.log
+scripts/output/
+
+# Ignore sensitive data files
+secrets/
+private/
+confidential/
