@@ -185,6 +185,7 @@ db_password                  = "strong-db-password"
 
 - **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Detailed deployment guide
 - **[VPN-ACCESS.md](docs/VPN-ACCESS.md)** - VPN setup and user management
+- **[NVME-OPTIMIZATION.md](docs/NVME-OPTIMIZATION.md)** - NVMe storage optimization for filestore
 - **[SECURITY.md](docs/SECURITY.md)** - Security best practices  
 - **[MONITORING.md](docs/MONITORING.md)** - Monitoring setup
 - **[BACKUP.md](docs/BACKUP.md)** - Backup and disaster recovery
@@ -225,7 +226,7 @@ systemctl status nginx
 ✅ **Secure VPN access** with OpenVPN server (5 users)
 ✅ **Zero external admin access** except Odoo web interface
 ✅ **Automated SSL** with Let's Encrypt  
-✅ **Local SSD** for high-performance I/O  
+✅ **Optimized NVMe SSD** with ext4 tuning for Odoo filestore  
 ✅ **Connection pooling** with PgBouncer  
 ✅ **Redis caching** for session management  
 ✅ **Comprehensive monitoring** and alerting  
