@@ -25,7 +25,7 @@ terraform {
   }
   
   backend "gcs" {
-    bucket = "${PROJECT_ID}-terraform-state"
+    bucket = "deep-wares-246918-terraform-state"
     prefix = "terraform/state"
   }
 }

@@ -7,7 +7,7 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 
 echo "Installing OpenVPN server for environment: ${environment}"
-echo "VPN Subnet: ${vpn_subnet_cidr}"
+echo "VPN Subnet: ${vpn_subnet_ip}/${vpn_subnet_mask}"
 echo "Max clients: ${max_vpn_clients}"
 
 # Update system
@@ -33,17 +33,17 @@ chown -R root:root /etc/openvpn/easy-rsa
 
 cd /etc/openvpn/easy-rsa
 
-# Initialize PKI
-./easyrsa init-pki
+# Initialize PKI (force if exists)
+echo "yes" | ./easyrsa init-pki
 
 # Build CA certificate
-echo "innova-${environment}-vpn" | ./easyrsa build-ca nopass
+echo "innova-${environment}-vpn" | ./easyrsa --batch build-ca nopass
 
 # Generate server certificate
-echo "vpn-server-${environment}" | ./easyrsa build-server-full server nopass
+./easyrsa --batch build-server-full server nopass
 
 # Generate Diffie-Hellman parameters
-./easyrsa gen-dh
+./easyrsa --batch gen-dh
 
 # Generate HMAC key
 openvpn --genkey secret pki/ta.key
@@ -63,7 +63,7 @@ dh easy-rsa/pki/dh.pem
 tls-auth easy-rsa/pki/ta.key 0
 
 # Network configuration
-server ${vpn_subnet_cidr%/*} ${vpn_subnet_cidr#*/}
+server ${vpn_subnet_ip} ${vpn_subnet_mask}
 ifconfig-pool-persist /var/log/openvpn/ipp.txt
 
 # Route internal network to VPN clients
@@ -108,7 +108,7 @@ mkdir -p /var/log/openvpn
 chown nobody:nogroup /var/log/openvpn
 
 # Configure iptables for NAT
-iptables -t nat -A POSTROUTING -s ${vpn_subnet_cidr} -o ens4 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o ens4 -j MASQUERADE
 iptables -A INPUT -i tun+ -j ACCEPT
 iptables -A FORWARD -i tun+ -j ACCEPT
 iptables -A FORWARD -i tun+ -o ens4 -m state --state RELATED,ESTABLISHED -j ACCEPT
@@ -352,7 +352,7 @@ sleep 10
 echo ""
 echo "OpenVPN server installation completed!"
 echo "Server IP: $(curl -s https://ipinfo.io/ip)"
-echo "VPN Subnet: ${vpn_subnet_cidr}"
+echo "VPN Subnet: ${vpn_subnet_ip}/${vpn_subnet_mask}"
 echo "Max Clients: ${max_vpn_clients}"
 echo ""
 echo "Admin configuration generated. Run the following to download it:"

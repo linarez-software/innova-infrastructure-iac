@@ -34,8 +34,8 @@ variable "staging_instance_type" {
   default     = "e2-standard-2"
 }
 
-variable "production_odoo_instance_type" {
-  description = "Instance type for production Odoo"
+variable "production_app_instance_type" {
+  description = "Instance type for production application server"
   type        = string
   default     = "c4-standard-4-lssd"
 }
@@ -46,8 +46,8 @@ variable "production_db_instance_type" {
   default     = "n2-highmem-4"
 }
 
-variable "odoo_service_account_email" {
-  description = "Service account email for Odoo"
+variable "app_service_account_email" {
+  description = "Service account email for application server"
   type        = string
 }
 
@@ -57,7 +57,7 @@ variable "db_service_account_email" {
 }
 
 variable "domain_name" {
-  description = "Domain name for Odoo"
+  description = "Domain name for application"
   type        = string
   default     = ""
 }
@@ -68,34 +68,16 @@ variable "ssl_email" {
   default     = ""
 }
 
-variable "odoo_admin_passwd" {
-  description = "Odoo admin password"
-  type        = string
-  sensitive   = true
-}
-
 variable "db_password" {
   description = "Database password"
   type        = string
   sensitive   = true
 }
 
-variable "odoo_version" {
-  description = "Odoo version"
-  type        = string
-  default     = "18.0"
-}
-
 variable "postgresql_version" {
   description = "PostgreSQL version"
   type        = string
   default     = "15"
-}
-
-variable "odoo_workers" {
-  description = "Number of Odoo workers"
-  type        = number
-  default     = 7
 }
 
 variable "labels" {

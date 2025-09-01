@@ -1,21 +1,21 @@
-output "odoo_instance_id" {
-  description = "Instance ID of Odoo server"
-  value       = google_compute_instance.odoo_instance.instance_id
+output "app_instance_id" {
+  description = "Instance ID of application server"
+  value       = google_compute_instance.app_instance.instance_id
 }
 
-output "odoo_instance_name" {
-  description = "Name of Odoo instance"
-  value       = google_compute_instance.odoo_instance.name
+output "app_instance_name" {
+  description = "Name of application instance"
+  value       = google_compute_instance.app_instance.name
 }
 
-output "odoo_external_ip" {
-  description = "External IP of Odoo instance"
-  value       = google_compute_instance.odoo_instance.network_interface[0].access_config[0].nat_ip
+output "app_external_ip" {
+  description = "External IP of application instance"
+  value       = google_compute_instance.app_instance.network_interface[0].access_config[0].nat_ip
 }
 
-output "odoo_internal_ip" {
-  description = "Internal IP of Odoo instance"
-  value       = google_compute_instance.odoo_instance.network_interface[0].network_ip
+output "app_internal_ip" {
+  description = "Internal IP of application instance"
+  value       = google_compute_instance.app_instance.network_interface[0].network_ip
 }
 
 output "db_instance_id" {
@@ -33,9 +33,9 @@ output "db_internal_ip" {
   value       = var.environment == "production" ? google_compute_instance.db_instance[0].network_interface[0].network_ip : ""
 }
 
-output "odoo_self_link" {
-  description = "Self link of Odoo instance"
-  value       = google_compute_instance.odoo_instance.self_link
+output "app_self_link" {
+  description = "Self link of application instance"
+  value       = google_compute_instance.app_instance.self_link
 }
 
 output "db_self_link" {

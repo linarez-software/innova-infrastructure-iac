@@ -35,7 +35,7 @@ output "subnet_cidr" {
 
 output "static_ip_address" {
   description = "Static external IP address for production"
-  value       = var.environment == "production" ? google_compute_address.odoo_static_ip[0].address : null
+  value       = var.environment == "production" ? google_compute_address.app_static_ip[0].address : null
 }
 
 output "firewall_rules" {
@@ -44,7 +44,7 @@ output "firewall_rules" {
     google_compute_firewall.allow_ssh_vpn_only.name,
     google_compute_firewall.allow_vpn_server.name,
     google_compute_firewall.allow_http_https.name,
-    google_compute_firewall.deny_direct_odoo_access.name,
+    google_compute_firewall.deny_direct_app_ports.name,
     google_compute_firewall.allow_internal_postgres.name,
     google_compute_firewall.allow_internal_redis.name,
     google_compute_firewall.allow_internal.name,

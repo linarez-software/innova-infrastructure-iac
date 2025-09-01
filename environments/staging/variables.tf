@@ -1,19 +1,18 @@
 variable "project_id" {
   description = "The GCP project ID"
   type        = string
-  default     = "${PROJECT_ID}"
 }
 
 variable "region" {
   description = "The GCP region for resources"
   type        = string
-  default     = "${GCP_REGION}"
+  default     = "us-central1"
 }
 
 variable "zone" {
   description = "The GCP zone for resources"
   type        = string
-  default     = "${GCP_ZONE}"
+  default     = "us-central1-a"
 }
 
 variable "staging_instance_type" {
@@ -29,7 +28,7 @@ variable "allowed_ssh_ips" {
 }
 
 variable "domain_name" {
-  description = "Domain name for the Odoo application (staging subdomain)"
+  description = "Domain name for the application (staging subdomain)"
   type        = string
   default     = ""
 }
@@ -40,12 +39,6 @@ variable "ssl_email" {
   default     = ""
 }
 
-variable "odoo_admin_passwd" {
-  description = "Odoo master admin password for staging"
-  type        = string
-  sensitive   = true
-  default     = "staging-admin-2024"
-}
 
 variable "db_password" {
   description = "PostgreSQL database password for staging"
@@ -66,11 +59,6 @@ variable "enable_backups" {
   default     = false
 }
 
-variable "odoo_version" {
-  description = "Odoo version to install"
-  type        = string
-  default     = "18.0"
-}
 
 variable "postgresql_version" {
   description = "PostgreSQL version to install"
@@ -83,8 +71,8 @@ variable "labels" {
   type        = map(string)
   default = {
     managed_by  = "terraform"
-    platform    = "odoo"
-    version     = "v18"
+    platform    = "infrastructure"
+    version     = "v1.0"
     environment = "staging"
   }
 }

@@ -52,7 +52,7 @@ resource "google_storage_bucket_iam_member" "backup_bucket_iam" {
   
   bucket = google_storage_bucket.backup_bucket[0].name
   role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${var.project_id}-compute@developer.gserviceaccount.com"
+  member = "serviceAccount:db-${var.environment}-sa@${var.project_id}.iam.gserviceaccount.com"
 }
 
 resource "google_compute_resource_policy" "daily_backup" {

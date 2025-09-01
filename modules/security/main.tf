@@ -1,7 +1,7 @@
-resource "google_service_account" "odoo_service_account" {
-  account_id   = "odoo-${var.environment}-sa"
-  display_name = "Odoo ${var.environment} Service Account"
-  description  = "Service account for Odoo application in ${var.environment}"
+resource "google_service_account" "app_service_account" {
+  account_id   = "app-${var.environment}-sa"
+  display_name = "Application ${var.environment} Service Account"
+  description  = "Service account for application server in ${var.environment}"
   
   project = var.project_id
 }
@@ -30,34 +30,34 @@ resource "google_service_account" "vpn_service_account" {
   project = var.project_id
 }
 
-resource "google_project_iam_member" "odoo_compute_instance_admin" {
+resource "google_project_iam_member" "app_compute_instance_admin" {
   project = var.project_id
   role    = "roles/compute.instanceAdmin"
-  member  = "serviceAccount:${google_service_account.odoo_service_account.email}"
+  member  = "serviceAccount:${google_service_account.app_service_account.email}"
 }
 
-resource "google_project_iam_member" "odoo_service_account_user" {
+resource "google_project_iam_member" "app_service_account_user" {
   project = var.project_id
   role    = "roles/iam.serviceAccountUser"
-  member  = "serviceAccount:${google_service_account.odoo_service_account.email}"
+  member  = "serviceAccount:${google_service_account.app_service_account.email}"
 }
 
-resource "google_project_iam_member" "odoo_log_writer" {
+resource "google_project_iam_member" "app_log_writer" {
   project = var.project_id
   role    = "roles/logging.logWriter"
-  member  = "serviceAccount:${google_service_account.odoo_service_account.email}"
+  member  = "serviceAccount:${google_service_account.app_service_account.email}"
 }
 
-resource "google_project_iam_member" "odoo_metric_writer" {
+resource "google_project_iam_member" "app_metric_writer" {
   project = var.project_id
   role    = "roles/monitoring.metricWriter"
-  member  = "serviceAccount:${google_service_account.odoo_service_account.email}"
+  member  = "serviceAccount:${google_service_account.app_service_account.email}"
 }
 
-resource "google_project_iam_member" "odoo_storage_object_viewer" {
+resource "google_project_iam_member" "app_storage_object_viewer" {
   project = var.project_id
   role    = "roles/storage.objectViewer"
-  member  = "serviceAccount:${google_service_account.odoo_service_account.email}"
+  member  = "serviceAccount:${google_service_account.app_service_account.email}"
 }
 
 resource "google_project_iam_member" "db_compute_instance_admin" {
@@ -156,20 +156,20 @@ resource "google_project_iam_member" "vpn_storage_admin" {
   member  = "serviceAccount:${google_service_account.vpn_service_account.email}"
 }
 
-resource "google_kms_key_ring" "odoo_keyring" {
+resource "google_kms_key_ring" "app_keyring" {
   count = var.environment == "production" ? 1 : 0
   
-  name     = "odoo-${var.environment}-keyring"
+  name     = "app-${var.environment}-keyring"
   location = "global"
   
   project = var.project_id
 }
 
-resource "google_kms_crypto_key" "odoo_key" {
+resource "google_kms_crypto_key" "app_key" {
   count = var.environment == "production" ? 1 : 0
   
   name            = "odoo-${var.environment}-key"
-  key_ring        = google_kms_key_ring.odoo_keyring[0].id
+  key_ring        = google_kms_key_ring.app_keyring[0].id
   rotation_period = "2592000s"
   
   lifecycle {
@@ -177,18 +177,18 @@ resource "google_kms_crypto_key" "odoo_key" {
   }
 }
 
-resource "google_kms_crypto_key_iam_member" "odoo_key_encrypter" {
+resource "google_kms_crypto_key_iam_member" "app_key_encrypter" {
   count = var.environment == "production" ? 1 : 0
   
-  crypto_key_id = google_kms_crypto_key.odoo_key[0].id
+  crypto_key_id = google_kms_crypto_key.app_key[0].id
   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
-  member        = "serviceAccount:${google_service_account.odoo_service_account.email}"
+  member        = "serviceAccount:${google_service_account.app_service_account.email}"
 }
 
 resource "google_kms_crypto_key_iam_member" "db_key_encrypter" {
   count = var.environment == "production" ? 1 : 0
   
-  crypto_key_id = google_kms_crypto_key.odoo_key[0].id
+  crypto_key_id = google_kms_crypto_key.app_key[0].id
   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
   member        = "serviceAccount:${google_service_account.db_service_account.email}"
 }

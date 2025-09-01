@@ -1,11 +1,11 @@
-output "odoo_instance_ip" {
-  description = "External IP address of the Odoo instance"
-  value       = module.compute.odoo_external_ip
+output "app_instance_ip" {
+  description = "External IP address of the application instance"
+  value       = module.compute.app_external_ip
 }
 
-output "odoo_instance_internal_ip" {
-  description = "Internal IP address of the Odoo instance"
-  value       = module.compute.odoo_internal_ip
+output "app_instance_internal_ip" {
+  description = "Internal IP address of the application instance"
+  value       = module.compute.app_internal_ip
 }
 
 output "db_instance_ip" {
@@ -13,14 +13,14 @@ output "db_instance_ip" {
   value       = var.environment == "production" ? module.compute.db_internal_ip : "N/A"
 }
 
-output "odoo_url" {
-  description = "URL to access Odoo application"
-  value       = var.domain_name != "" ? "https://${var.domain_name}" : "http://${module.compute.odoo_external_ip}"
+output "app_url" {
+  description = "URL to access application"
+  value       = var.domain_name != "" ? "https://${var.domain_name}" : "http://${module.compute.app_external_ip}"
 }
 
-output "ssh_command_odoo" {
-  description = "SSH command to connect to Odoo instance"
-  value       = "gcloud compute ssh ${module.compute.odoo_instance_name} --zone=${var.zone} --project=${var.project_id}"
+output "ssh_command_app" {
+  description = "SSH command to connect to application instance"
+  value       = "gcloud compute ssh ${module.compute.app_instance_name} --zone=${var.zone} --project=${var.project_id}"
 }
 
 output "ssh_command_db" {
@@ -56,7 +56,7 @@ output "ssh_command_vpn" {
 output "service_accounts" {
   description = "Service account emails created"
   value = {
-    odoo       = module.security.odoo_service_account_email
+    app        = module.security.app_service_account_email
     database   = module.security.db_service_account_email
     monitoring = module.security.monitoring_service_account_email
     vpn        = module.security.vpn_service_account_email

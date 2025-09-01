@@ -1,14 +1,14 @@
-# NVMe Storage Optimization for Odoo Filestore
+# NVMe Storage Optimization for Application File Storage
 
-Comprehensive guide for optimizing NVMe local SSD performance specifically for Odoo v18 filestore operations supporting 30 concurrent users.
+Comprehensive guide for optimizing NVMe local SSD performance specifically for application file storage and high-performance workloads.
 
 ## 🎯 Optimization Overview
 
-The c4-standard-4-lssd instance includes a local NVMe SSD that provides significant performance benefits for Odoo's file-intensive operations. Our optimizations focus on:
+The c4-standard-4-lssd instance includes a local NVMe SSD that provides significant performance benefits for file-intensive operations. Our optimizations focus on:
 
-- **Small file performance**: Odoo attachments average 50KB-2MB
+- **Small file performance**: Optimized for typical application file sizes (50KB-2MB)
 - **Metadata operations**: Frequent file creation, deletion, and access
-- **Concurrent access**: Support for 30 users uploading/downloading files
+- **Concurrent access**: Support for multiple concurrent file operations
 - **Data integrity**: Maintain journal protection while optimizing performance
 
 ## 📊 Performance Impact
@@ -21,7 +21,7 @@ The c4-standard-4-lssd instance includes a local NVMe SSD that provides signific
 | **File access time** | ~15ms | ~5-8ms | 2-3x faster |
 | **Metadata operations** | ~50 ops/sec | ~150-200 ops/sec | 3-4x faster |
 | **Space efficiency** | 95% usable | 99% usable | +4% storage |
-| **Concurrent uploads** | 10 users | 30+ users | 3x capacity |
+| **Concurrent operations** | 10 operations | 30+ operations | 3x capacity |
 
 ## 🔧 Technical Optimizations Applied
 
@@ -32,13 +32,13 @@ parted -s /dev/nvme0n1 mklabel gpt
 parted -s /dev/nvme0n1 mkpart primary ext4 0% 100%
 ```
 - **Why**: Eliminates partition overhead, uses 100% of available space
-- **Benefit**: Maximum storage capacity for filestore
+- **Benefit**: Maximum storage capacity for application files
 
 ### 2. **Filesystem Optimization**
 ```bash
-# ext4 with Odoo-specific optimizations
+# ext4 with application-specific optimizations
 mkfs.ext4 \
-    -L odoo-filestore \
+    -L app-storage \
     -E lazy_itable_init=0,lazy_journal_init=0 \
     -O ^has_journal,extent,dir_index,filetype,sparse_super,large_file,flex_bg,uninit_bg,64bit \
     -i 8192 \
@@ -73,32 +73,32 @@ tune2fs -E stride=32,stripe-width=32 /dev/nvme0n1p1
 ### 5. **Mount Optimizations**
 ```bash
 # Performance-oriented mount options
-mount -t ext4 -o noatime,user_xattr,data=writeback,nofail /dev/nvme0n1p1 /opt/odoo
+mount -t ext4 -o noatime,user_xattr,data=writeback,nofail /dev/nvme0n1p1 /opt/app-data
 ```
 
 **Mount Options Explained:**
 - **noatime**: No access time updates (major performance gain)
-- **user_xattr**: Extended attributes for Odoo metadata
+- **user_xattr**: Extended attributes for application metadata
 - **data=writeback**: Journal metadata only, not data
 - **nofail**: System boots even if NVMe unavailable
 
 ## 📁 Directory Structure
 
-### NVMe Mount Point: `/opt/odoo`
+### NVMe Mount Point: `/opt/app-data`
 ```
-/opt/odoo/
-├── filestore/          # Odoo file attachments (primary benefit)
+/opt/app-data/
+├── storage/            # Application file storage (primary benefit)
 ├── sessions/           # User session data
 ├── logs/              # Application logs
-├── addons-extra/      # Custom addons
-└── backups/           # Local backup staging
+├── cache/             # Temporary cache files
+└── uploads/           # File upload staging
 ```
 
-### Symbolic Links
+### Symbolic Links for Application Integration
 ```bash
-# Transparent integration with standard Odoo paths
-/var/lib/odoo/filestore → /opt/odoo/filestore
-/var/lib/odoo/sessions → /opt/odoo/sessions
+# Transparent integration with standard application paths
+/var/www/storage → /opt/app-data/storage
+/var/lib/app/files → /opt/app-data/storage
 ```
 
 ## 🚀 Usage Examples
@@ -116,20 +116,17 @@ terraform apply
 sudo ./scripts/optimize-nvme-odoo.sh
 
 # Or with custom parameters
-sudo ./scripts/optimize-nvme-odoo.sh /dev/nvme0n1 /opt/odoo
+sudo ./scripts/optimize-nvme-odoo.sh /dev/nvme0n1 /opt/app-data
 ```
 
 ### Verification Commands
 ```bash
 # Check optimization status
-sudo /opt/scripts/verify-nvme-optimization.sh
-
-# Monitor performance
-sudo /opt/scripts/monitor-nvme-performance.sh
+sudo /opt/scripts/system-monitor.sh
 
 # View filesystem details
 tune2fs -l /dev/nvme0n1p1
-df -h /opt/odoo
+df -h /opt/app-data
 ```
 
 ## 📈 Performance Monitoring
@@ -143,19 +140,19 @@ iostat -x 1
 nvme smart-log /dev/nvme0n1
 
 # Filesystem usage
-watch -n 2 'df -h /opt/odoo && echo && ls -la /opt/odoo/'
+watch -n 2 'df -h /opt/app-data && echo && ls -la /opt/app-data/'
 ```
 
 ### Performance Benchmarks
 ```bash
 # Quick performance test
-fio --name=odoo-test --directory=/opt/odoo --size=100M --bs=4k \
+fio --name=app-test --directory=/opt/app-data --size=100M --bs=4k \
     --rw=randrw --rwmixread=70 --runtime=30 --time_based --direct=1 \
     --group_reporting --numjobs=4 --ioengine=libaio
 
 # Metadata operations test
-time for i in {1..1000}; do touch /opt/odoo/test_$i; done
-time rm /opt/odoo/test_*
+time for i in {1..1000}; do touch /opt/app-data/test_$i; done
+time rm /opt/app-data/test_*
 ```
 
 ### Expected Benchmark Results (c4-standard-4-lssd)
@@ -192,7 +189,7 @@ grep nvme /etc/fstab
 blkid /dev/nvme0n1p1
 
 # Manual mount test
-mount /dev/nvme0n1p1 /opt/odoo
+mount /dev/nvme0n1p1 /opt/app-data
 ```
 
 #### 3. Performance Lower Than Expected
@@ -207,15 +204,15 @@ tune2fs -l /dev/nvme0n1p1 | grep -E "(Journal|Mount options)"
 iotop -a
 ```
 
-#### 4. Odoo Filestore Issues
+#### 4. Application File Access Issues
 ```bash
 # Verify symbolic links
-ls -la /var/lib/odoo/filestore
-ls -la /var/lib/odoo/sessions
+ls -la /var/www/storage
+ls -la /var/lib/app/files
 
 # Check permissions
-ls -la /opt/odoo/
-sudo -u odoo touch /opt/odoo/filestore/test_file
+ls -la /opt/app-data/
+sudo -u www-data touch /opt/app-data/storage/test_file
 ```
 
 ### Recovery Procedures
@@ -223,25 +220,25 @@ sudo -u odoo touch /opt/odoo/filestore/test_file
 #### Re-create Optimization
 ```bash
 # If filesystem becomes corrupted
-sudo umount /opt/odoo
+sudo umount /opt/app-data
 sudo ./scripts/optimize-nvme-odoo.sh
-sudo systemctl restart odoo
+sudo systemctl restart nginx
 ```
 
 #### Fallback to Standard Storage
 ```bash
 # Emergency fallback
-sudo systemctl stop odoo
-sudo umount /opt/odoo
-sudo rm /var/lib/odoo/filestore /var/lib/odoo/sessions
-sudo mkdir -p /var/lib/odoo/filestore /var/lib/odoo/sessions
-sudo chown odoo:odoo /var/lib/odoo/filestore /var/lib/odoo/sessions
-sudo systemctl start odoo
+sudo systemctl stop nginx
+sudo umount /opt/app-data
+sudo rm /var/www/storage /var/lib/app/files
+sudo mkdir -p /var/www/storage /var/lib/app/files
+sudo chown www-data:www-data /var/www/storage /var/lib/app/files
+sudo systemctl start nginx
 ```
 
 ## 🛠️ Advanced Tuning
 
-### For Higher Concurrency (50+ Users)
+### For Higher Concurrency (50+ Operations)
 ```bash
 # Increase inode density for more small files
 sudo tune2fs -E stride=64,stripe-width=64 /dev/nvme0n1p1
@@ -252,7 +249,7 @@ echo 8192 > /sys/block/nvme0n1/queue/read_ahead_kb
 
 ### For Larger File Workloads
 ```bash
-# Optimize for larger files (if using documents > 10MB)
+# Optimize for larger files (if using files > 10MB)
 sudo tune2fs -E stride=128,stripe-width=512 /dev/nvme0n1p1
 ```
 
@@ -277,7 +274,7 @@ echo 'vm.swappiness = 10' >> /etc/sysctl.conf
 | **Cost/month** | ~$40/375GB | ~$0 (included) | Significant savings |
 | **Data persistence** | Yes | No (recreated on reboot) | Trade-off |
 
-### ROI for 30 Concurrent Users
+### ROI for High-Performance Applications
 - **User Experience**: 2-3x faster file operations
 - **System Capacity**: Support 3x more concurrent file operations
 - **Cost Savings**: ~$40/month vs additional PD-SSD
@@ -289,16 +286,16 @@ echo 'vm.swappiness = 10' >> /etc/sysctl.conf
 Local NVMe is **ephemeral** - data is lost when instance stops. Our strategy:
 
 1. **Primary Data**: Database on persistent disk (n2-highmem-4)
-2. **File Attachments**: NVMe for performance + automated backups
+2. **File Storage**: NVMe for performance + automated backups
 3. **Recovery**: Restore from GCS backups when needed
 
 ### Backup Integration
 ```bash
 # Automated backup to GCS (included in infrastructure)
-gsutil -m rsync -r /opt/odoo/filestore gs://PROJECT-production-backups/filestore/
+gsutil -m rsync -r /opt/app-data/storage gs://PROJECT-production-backups/app-data/
 
 # Quick restore
-gsutil -m rsync -r gs://PROJECT-production-backups/filestore/ /opt/odoo/filestore/
+gsutil -m rsync -r gs://PROJECT-production-backups/app-data/ /opt/app-data/storage/
 ```
 
 ## 🎯 Best Practices
@@ -310,8 +307,8 @@ gsutil -m rsync -r gs://PROJECT-production-backups/filestore/ /opt/odoo/filestor
 4. **Document changes** for team knowledge
 
 ### Operation
-1. **Monitor disk space** - filestore grows with usage
-2. **Regular cleanup** of old attachments via Odoo
+1. **Monitor disk space** - storage grows with usage
+2. **Regular cleanup** of old files via application
 3. **Performance testing** during peak usage periods
 4. **Capacity planning** based on growth trends
 
@@ -323,4 +320,4 @@ gsutil -m rsync -r gs://PROJECT-production-backups/filestore/ /opt/odoo/filestor
 
 ---
 
-This NVMe optimization provides significant performance improvements for Odoo filestore operations, enabling smooth support for 30+ concurrent users with file-intensive workflows while maintaining data integrity and system reliability.
+This NVMe optimization provides significant performance improvements for application file storage operations, enabling smooth support for high-performance workloads while maintaining data integrity and system reliability.

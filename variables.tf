@@ -1,19 +1,18 @@
 variable "project_id" {
   description = "The GCP project ID"
   type        = string
-  default     = "${PROJECT_ID}"
 }
 
 variable "region" {
   description = "The GCP region for resources"
   type        = string
-  default     = "${GCP_REGION}"
+  default     = "us-central1"
 }
 
 variable "zone" {
   description = "The GCP zone for resources"
   type        = string
-  default     = "${GCP_ZONE}"
+  default     = "us-central1-a"
 }
 
 variable "environment" {
@@ -31,8 +30,8 @@ variable "staging_instance_type" {
   default     = "e2-standard-2"
 }
 
-variable "production_odoo_instance_type" {
-  description = "Instance type for production Odoo server"
+variable "production_app_instance_type" {
+  description = "Instance type for production application server"
   type        = string
   default     = "c4-standard-4-lssd"
 }
@@ -50,7 +49,7 @@ variable "allowed_ssh_ips" {
 }
 
 variable "domain_name" {
-  description = "Domain name for the Odoo application"
+  description = "Domain name for the application"
   type        = string
   default     = ""
 }
@@ -58,13 +57,6 @@ variable "domain_name" {
 variable "ssl_email" {
   description = "Email address for Let's Encrypt SSL certificates"
   type        = string
-  default     = ""
-}
-
-variable "odoo_admin_passwd" {
-  description = "Odoo master admin password"
-  type        = string
-  sensitive   = true
   default     = ""
 }
 
@@ -93,22 +85,10 @@ variable "backup_retention_days" {
   default     = 30
 }
 
-variable "odoo_version" {
-  description = "Odoo version to install"
-  type        = string
-  default     = "18.0"
-}
-
 variable "postgresql_version" {
   description = "PostgreSQL version to install"
   type        = string
   default     = "15"
-}
-
-variable "odoo_workers" {
-  description = "Number of Odoo worker processes"
-  type        = number
-  default     = 7
 }
 
 variable "labels" {
@@ -116,7 +96,7 @@ variable "labels" {
   type        = map(string)
   default = {
     managed_by = "terraform"
-    platform   = "odoo"
-    version    = "v18"
+    platform   = "infrastructure"
+    version    = "v1.0"
   }
 }

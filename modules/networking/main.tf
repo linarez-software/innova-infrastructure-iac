@@ -25,7 +25,7 @@ resource "google_compute_subnetwork" "subnet" {
 }
 
 resource "google_compute_firewall" "allow_ssh_vpn_only" {
-  name    = "${var.network_name}-allow-ssh-vpn-only"
+  name    = "${var.environment}-allow-ssh-vpn-only"
   network = google_compute_network.vpc_network.name
   
   allow {
@@ -44,7 +44,7 @@ resource "google_compute_firewall" "allow_ssh_vpn_only" {
 }
 
 resource "google_compute_firewall" "allow_vpn_server" {
-  name    = "${var.network_name}-allow-vpn"
+  name    = "${var.environment}-allow-vpn"
   network = google_compute_network.vpc_network.name
   
   allow {
@@ -59,7 +59,7 @@ resource "google_compute_firewall" "allow_vpn_server" {
 }
 
 resource "google_compute_firewall" "allow_http_https" {
-  name    = "${var.network_name}-allow-http-https"
+  name    = "${var.environment}-allow-http-https"
   network = google_compute_network.vpc_network.name
   
   allow {
@@ -73,24 +73,24 @@ resource "google_compute_firewall" "allow_http_https" {
   project = var.project_id
 }
 
-resource "google_compute_firewall" "deny_direct_odoo_access" {
-  name     = "${var.network_name}-deny-direct-odoo"
+resource "google_compute_firewall" "deny_direct_app_ports" {
+  name     = "${var.environment}-deny-direct-app"
   network  = google_compute_network.vpc_network.name
   priority = 1000
   
   deny {
     protocol = "tcp"
-    ports    = ["8069", "8072"]
+    ports    = ["8000-8999", "3000-3999", "9000-9999"]
   }
   
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["odoo-server"]
+  target_tags   = ["app-server"]
   
   project = var.project_id
 }
 
 resource "google_compute_firewall" "allow_internal_postgres" {
-  name    = "${var.network_name}-allow-internal-postgres"
+  name    = "${var.environment}-allow-internal-postgres"
   network = google_compute_network.vpc_network.name
   
   allow {
@@ -106,7 +106,7 @@ resource "google_compute_firewall" "allow_internal_postgres" {
 }
 
 resource "google_compute_firewall" "allow_internal_redis" {
-  name    = "${var.network_name}-allow-internal-redis"
+  name    = "${var.environment}-allow-internal-redis"
   network = google_compute_network.vpc_network.name
   
   allow {
@@ -122,7 +122,7 @@ resource "google_compute_firewall" "allow_internal_redis" {
 }
 
 resource "google_compute_firewall" "allow_internal" {
-  name    = "${var.network_name}-allow-internal"
+  name    = "${var.environment}-allow-internal"
   network = google_compute_network.vpc_network.name
   
   allow {
@@ -146,7 +146,7 @@ resource "google_compute_firewall" "allow_internal" {
 }
 
 resource "google_compute_firewall" "deny_all" {
-  name     = "${var.network_name}-deny-all"
+  name     = "${var.environment}-deny-all"
   network  = google_compute_network.vpc_network.name
   priority = 65534
   
@@ -159,10 +159,10 @@ resource "google_compute_firewall" "deny_all" {
   project = var.project_id
 }
 
-resource "google_compute_address" "odoo_static_ip" {
+resource "google_compute_address" "app_static_ip" {
   count = var.environment == "production" ? 1 : 0
   
-  name         = "${var.network_name}-odoo-ip"
+  name         = "${var.environment}-app-ip"
   address_type = "EXTERNAL"
   region       = var.region
   
@@ -170,7 +170,7 @@ resource "google_compute_address" "odoo_static_ip" {
 }
 
 resource "google_compute_router" "router" {
-  name    = "${var.network_name}-router"
+  name    = "${var.environment}-router"
   network = google_compute_network.vpc_network.id
   region  = var.region
   

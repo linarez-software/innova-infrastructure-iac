@@ -38,11 +38,6 @@ resource "google_monitoring_alert_policy" "cpu_utilization" {
   
   notification_channels = [google_monitoring_notification_channel.email.id]
   
-  alert_strategy {
-    notification_rate_limit {
-      period = "300s"
-    }
-  }
   
   documentation {
     content   = "CPU usage has exceeded 80% for 5 minutes."
@@ -75,11 +70,6 @@ resource "google_monitoring_alert_policy" "memory_utilization" {
   
   notification_channels = [google_monitoring_notification_channel.email.id]
   
-  alert_strategy {
-    notification_rate_limit {
-      period = "300s"
-    }
-  }
   
   documentation {
     content   = "Memory usage has exceeded 90% for 5 minutes."
@@ -112,11 +102,6 @@ resource "google_monitoring_alert_policy" "disk_utilization" {
   
   notification_channels = [google_monitoring_notification_channel.email.id]
   
-  alert_strategy {
-    notification_rate_limit {
-      period = "300s"
-    }
-  }
   
   documentation {
     content   = "Disk usage has exceeded 85%."
@@ -149,11 +134,6 @@ resource "google_monitoring_alert_policy" "instance_uptime" {
   
   notification_channels = [google_monitoring_notification_channel.email.id]
   
-  alert_strategy {
-    notification_rate_limit {
-      period = "300s"
-    }
-  }
   
   documentation {
     content   = "Instance appears to be down."
@@ -279,11 +259,6 @@ resource "google_monitoring_alert_policy" "database_connection_failures" {
   
   notification_channels = [google_monitoring_notification_channel.email.id]
   
-  alert_strategy {
-    notification_rate_limit {
-      period = "300s"
-    }
-  }
   
   documentation {
     content   = "Database connection failures detected."
@@ -318,11 +293,6 @@ resource "google_monitoring_alert_policy" "local_ssd_performance" {
   
   notification_channels = [google_monitoring_notification_channel.email.id]
   
-  alert_strategy {
-    notification_rate_limit {
-      period = "600s"
-    }
-  }
   
   documentation {
     content   = "Local SSD performance degradation detected."

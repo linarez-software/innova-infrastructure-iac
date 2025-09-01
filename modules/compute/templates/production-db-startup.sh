@@ -78,7 +78,7 @@ local   all             all                                     peer
 host    all             all             127.0.0.1/32            md5
 host    all             all             ::1/128                 md5
 host    all             all             10.0.0.0/24             md5
-host    all             odoo            ${odoo_host}/32         md5
+host    all             appuser         10.0.0.0/24             md5
 EOL
 
 systemctl start postgresql
@@ -86,8 +86,9 @@ systemctl enable postgresql
 
 sudo -u postgres psql <<EOF
 ALTER USER postgres PASSWORD '${db_password}';
-CREATE USER odoo WITH PASSWORD '${db_password}';
-ALTER USER odoo CREATEDB;
+CREATE USER appuser WITH PASSWORD '${db_password}';
+ALTER USER appuser CREATEDB;
+CREATE DATABASE appdb OWNER appuser;
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 EOF
 
@@ -119,7 +120,7 @@ logfile = /var/log/postgresql/pgbouncer.log
 pidfile = /var/run/postgresql/pgbouncer.pid
 EOL
 
-echo "\"odoo\" \"md5$(echo -n '${db_password}odoo' | md5sum | cut -d' ' -f1)\"" > /etc/pgbouncer/userlist.txt
+echo "\"appuser\" \"md5$(echo -n '${db_password}appuser' | md5sum | cut -d' ' -f1)\"" > /etc/pgbouncer/userlist.txt
 echo "\"postgres\" \"md5$(echo -n '${db_password}postgres' | md5sum | cut -d' ' -f1)\"" >> /etc/pgbouncer/userlist.txt
 
 chown postgres:postgres /etc/pgbouncer/userlist.txt
@@ -133,12 +134,12 @@ cat > /backup/scripts/backup.sh <<'EOL'
 #!/bin/bash
 BACKUP_DIR="/backup/postgresql"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-DB_NAME="odoo"
+DB_NAME="appdb"
 
 mkdir -p $BACKUP_DIR
 
 for DB in $(sudo -u postgres psql -t -c "SELECT datname FROM pg_database WHERE datistemplate = false AND datname != 'postgres';"); do
-    sudo -u postgres pg_dump -Fc -b -v -f "$BACKUP_DIR/${DB}_${TIMESTAMP}.backup" $DB
+    sudo -u postgres pg_dump -Fc -b -v -f "$BACKUP_DIR/$${DB}_$${TIMESTAMP}.backup" $DB
 done
 
 find $BACKUP_DIR -name "*.backup" -mtime +30 -delete

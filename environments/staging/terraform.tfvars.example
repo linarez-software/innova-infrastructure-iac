@@ -15,12 +15,10 @@ allowed_ssh_ips = [
 domain_name = ""  # Leave empty to use IP address
 ssl_email   = ""  # Required if domain_name is set
 
-# Odoo Configuration
-odoo_admin_passwd = "your-secure-admin-password"  # Change this!
-db_password       = "your-secure-db-password"     # Change this!
+# Database Configuration
+db_password = "your-secure-db-password"  # Change this!
 
 # Application Versions
-odoo_version       = "18.0"
 postgresql_version = "15"
 
 # Monitoring and Backup
@@ -30,8 +28,8 @@ enable_backups    = false  # Disabled for staging to save costs
 # Resource Labels
 labels = {
   managed_by  = "terraform"
-  platform    = "odoo"
-  version     = "v18"
+  platform    = "infrastructure"
+  version     = "v1.0"
   environment = "staging"
   team        = "dev"
   cost_center = "development"

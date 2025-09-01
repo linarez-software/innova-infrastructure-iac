@@ -8,8 +8,8 @@ variable "environment" {
   type        = string
 }
 
-variable "odoo_instance_id" {
-  description = "Instance ID of Odoo server"
+variable "app_instance_id" {
+  description = "Instance ID of application server"
   type        = string
 }
 
