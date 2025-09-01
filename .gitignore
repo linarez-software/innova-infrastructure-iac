@@ -55,6 +55,10 @@ pids
 *.pfx
 id_rsa*
 
+# SSH keys and developer packages
+ssh-keys/
+!ssh-keys/.gitkeep
+
 # Local configuration overrides
 local.tf
 *_override.tf

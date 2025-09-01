@@ -60,6 +60,15 @@ variable "pgadmin_password" {
   default     = ""
 }
 
+variable "staging_ssh_users" {
+  description = "List of SSH users for staging environment (developers without GCP access)"
+  type = list(object({
+    username = string
+    ssh_key  = string
+  }))
+  default = []
+}
+
 variable "enable_monitoring" {
   description = "Enable GCP monitoring and logging"
   type        = bool

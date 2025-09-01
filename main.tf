@@ -25,6 +25,7 @@ resource "google_project_service" "required_apis" {
     "logging.googleapis.com",
     "iap.googleapis.com",
     "cloudkms.googleapis.com",
+    "dns.googleapis.com",
   ])
 
   service            = each.value
@@ -75,6 +76,7 @@ module "compute" {
   postgresql_version           = var.postgresql_version
   pgadmin_email                = var.pgadmin_email
   pgadmin_password             = var.pgadmin_password
+  staging_ssh_users            = var.staging_ssh_users
   labels                       = local.common_labels
 
   depends_on = [
@@ -170,5 +172,40 @@ module "monitoring" {
   depends_on = [
     module.compute,
     module.security
+  ]
+}
+
+module "dns" {
+  source = "./modules/dns"
+  
+  count = var.enable_dns ? 1 : 0
+  
+  project_id    = var.project_id
+  domain_name   = var.dns_domain_name
+  zone_name     = var.dns_zone_name
+  create_zone   = var.create_dns_zone
+  ttl           = var.dns_ttl
+  
+  # Production IPs
+  app_production_ip     = var.environment == "production" ? module.compute.app_external_ip : ""
+  db_production_ip      = var.environment == "production" && local.is_production ? module.compute.db_external_ip : ""
+  vpn_production_ip     = var.environment == "production" ? module.vpn.vpn_external_ip : ""
+  jenkins_production_ip = var.environment == "production" && var.enable_jenkins ? module.jenkins[0].jenkins_external_ip : ""
+  
+  # Staging IPs - These would need to be provided as variables or data sources
+  app_staging_ip     = var.environment == "staging" ? module.compute.app_external_ip : var.staging_app_ip
+  vpn_staging_ip     = var.environment == "staging" ? module.vpn.vpn_external_ip : var.staging_vpn_ip
+  jenkins_staging_ip = var.environment == "staging" && var.enable_jenkins ? module.jenkins[0].jenkins_external_ip : var.staging_jenkins_ip
+  
+  enable_dev_tools_dns = var.environment == "staging"
+  mx_records          = var.mx_records
+  txt_records         = var.txt_records
+  labels              = local.common_labels
+  
+  depends_on = [
+    google_project_service.required_apis,
+    module.compute,
+    module.vpn,
+    module.jenkins
   ]
 }

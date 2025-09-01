@@ -88,3 +88,13 @@ output "backup_bucket" {
   description = "GCS bucket for backups"
   value       = module.database.backup_bucket_name
 }
+
+output "dns_info" {
+  description = "DNS configuration information"
+  value = var.enable_dns ? {
+    zone_name    = module.dns[0].zone_name
+    name_servers = module.dns[0].name_servers
+    dns_records  = module.dns[0].dns_records
+    domain_urls  = module.dns[0].domain_urls
+  } : null
+}

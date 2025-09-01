@@ -93,6 +93,15 @@ variable "pgadmin_password" {
   default     = ""
 }
 
+variable "staging_ssh_users" {
+  description = "List of SSH users for staging environment (developers without GCP access)"
+  type = list(object({
+    username = string
+    ssh_key  = string
+  }))
+  default = []
+}
+
 variable "labels" {
   description = "Labels to apply"
   type        = map(string)

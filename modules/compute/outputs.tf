@@ -33,6 +33,11 @@ output "db_internal_ip" {
   value       = var.environment == "production" ? google_compute_instance.db_instance[0].network_interface[0].network_ip : ""
 }
 
+output "db_external_ip" {
+  description = "External IP of database instance"
+  value       = var.environment == "production" ? google_compute_instance.db_instance[0].network_interface[0].access_config[0].nat_ip : ""
+}
+
 output "app_self_link" {
   description = "Self link of application instance"
   value       = google_compute_instance.app_instance.self_link

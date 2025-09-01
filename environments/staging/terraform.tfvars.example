@@ -22,6 +22,19 @@ db_password = "your-secure-db-password"  # Change this!
 pgadmin_email    = "admin@staging.local"     # pgAdmin default admin email
 pgadmin_password = ""                        # Leave empty to use db_password
 
+# SSH Users for Developers (VPN access required)
+# Generate SSH keys for developers who don't have GCP access
+staging_ssh_users = [
+  # {
+  #   username = "john.doe"
+  #   ssh_key  = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG... john.doe@staging"
+  # },
+  # {
+  #   username = "jane.smith"
+  #   ssh_key  = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH... jane.smith@staging"
+  # }
+]
+
 # Application Versions
 postgresql_version = "15"
 
@@ -43,6 +56,12 @@ github_token_secret        = ""  # GitHub Personal Access Token
 docker_registry_secret     = ""  # Docker registry credentials
 staging_deploy_key_secret  = ""  # SSH key for staging deployments
 prod_deploy_key_secret     = ""  # SSH key for production deployments
+
+# DNS Configuration (optional - usually managed from production)
+enable_dns      = false                   # Usually DNS is managed from production
+dns_domain_name = "innovaeyewear.com"    # Your domain name
+dns_zone_name   = "innovaeyewear-zone"   # Name of the Cloud DNS zone
+create_dns_zone = false                   # Zone should already exist
 
 # Resource Labels
 labels = {

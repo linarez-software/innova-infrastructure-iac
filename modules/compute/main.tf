@@ -13,6 +13,7 @@ locals {
     ssl_email          = var.ssl_email
     pgadmin_email      = var.pgadmin_email
     pgadmin_password   = var.pgadmin_password
+    staging_ssh_users  = var.staging_ssh_users
   })
 
   production_app_startup_script = local.is_production ? templatefile("${path.module}/templates/production-app-startup.sh", {
@@ -69,7 +70,7 @@ resource "google_compute_instance" "app_instance" {
 
   metadata = {
     startup-script = local.staging_startup_script
-    enable-oslogin = "TRUE"
+    enable-oslogin = local.is_production ? "TRUE" : "FALSE"  # Disable OS Login for staging to use traditional SSH
   }
 
   service_account {

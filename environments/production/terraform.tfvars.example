@@ -44,6 +44,30 @@ docker_registry_secret     = ""  # Docker registry credentials
 staging_deploy_key_secret  = ""  # SSH key for staging deployments
 prod_deploy_key_secret     = ""  # SSH key for production deployments
 
+# DNS Configuration
+enable_dns      = true                    # Enable Cloud DNS management
+dns_domain_name = "innovaeyewear.com"    # Your domain name
+dns_zone_name   = "innovaeyewear-zone"   # Name of the Cloud DNS zone
+create_dns_zone = false                   # Set to true if zone doesn't exist
+dns_ttl         = 300                     # TTL for DNS records (5 minutes)
+
+# Cross-environment IPs (if managing DNS from production)
+# Get these values from staging environment outputs
+staging_app_ip     = ""  # External IP of staging app server
+staging_vpn_ip     = ""  # External IP of staging VPN server  
+staging_jenkins_ip = ""  # External IP of staging Jenkins server
+
+# Email DNS records (optional)
+mx_records = [
+  # "10 mail.innovaeyewear.com.",
+  # "20 mail2.innovaeyewear.com."
+]
+
+txt_records = [
+  # "v=spf1 include:_spf.google.com ~all",  # SPF record
+  # "google-site-verification=..."           # Google verification
+]
+
 # Resource Labels
 labels = {
   managed_by   = "terraform"

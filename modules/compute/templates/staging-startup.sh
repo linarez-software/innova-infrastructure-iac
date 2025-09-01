@@ -282,9 +282,56 @@ chown -R www-data:www-data /var/www
 chown -R www-data:www-data /opt/app-data
 chmod 755 /opt/app-data
 
-# Configure firewall
+# Configure SSH users for developers (VPN access only)
+echo "Configuring SSH users for developers..."
+
+# Create a function to add SSH users
+add_ssh_user() {
+    local username=$1
+    local ssh_key=$2
+    
+    if ! id -u "$username" >/dev/null 2>&1; then
+        echo "Creating user $username..."
+        useradd -m -s /bin/bash "$username"
+        usermod -aG sudo "$username"
+    fi
+    
+    # Set up SSH directory
+    mkdir -p "/home/$username/.ssh"
+    chmod 700 "/home/$username/.ssh"
+    
+    # Add the SSH key
+    echo "$ssh_key" > "/home/$username/.ssh/authorized_keys"
+    chmod 600 "/home/$username/.ssh/authorized_keys"
+    chown -R "$username:$username" "/home/$username/.ssh"
+    
+    # Set a random password (users will use SSH keys)
+    password=$(openssl rand -base64 12)
+    echo "$username:$password" | chpasswd
+    
+    echo "User $username configured successfully"
+}
+
+# Add developer SSH users from Terraform variables
+%{ for user in staging_ssh_users ~}
+add_ssh_user "${user.username}" "${user.ssh_key}"
+%{ endfor ~}
+
+# Disable OS Login for staging to use traditional SSH
+echo "Disabling OS Login for traditional SSH access..."
+if [ -f /etc/ssh/sshd_config ]; then
+    # Ensure password authentication is disabled (only SSH keys)
+    sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+    sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+    
+    # Restart SSH service
+    systemctl restart sshd || systemctl restart ssh
+fi
+
+# Configure firewall (SSH only from VPN)
 ufw --force enable
-ufw allow ssh
+ufw allow from 10.8.0.0/24 to any port 22  # SSH only from VPN
 ufw allow http
 ufw allow https
 ufw allow 8025  # Mailhog web interface

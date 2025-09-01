@@ -80,6 +80,15 @@ variable "pgadmin_password" {
   default     = ""
 }
 
+variable "staging_ssh_users" {
+  description = "List of SSH users for staging environment (developers without GCP access)"
+  type = list(object({
+    username = string
+    ssh_key  = string
+  }))
+  default = []
+}
+
 variable "enable_monitoring" {
   description = "Enable GCP monitoring and logging"
   type        = bool
@@ -184,4 +193,66 @@ variable "labels" {
     platform   = "infrastructure"
     version    = "v1.0"
   }
+}
+
+# DNS Configuration
+variable "enable_dns" {
+  description = "Enable Cloud DNS configuration"
+  type        = bool
+  default     = false
+}
+
+variable "dns_domain_name" {
+  description = "The domain name for DNS records (e.g., innovaeyewear.com)"
+  type        = string
+  default     = "innovaeyewear.com"
+}
+
+variable "dns_zone_name" {
+  description = "The name of the Cloud DNS managed zone"
+  type        = string
+  default     = "innovaeyewear-zone"
+}
+
+variable "create_dns_zone" {
+  description = "Whether to create a new DNS zone or use an existing one"
+  type        = bool
+  default     = false
+}
+
+variable "dns_ttl" {
+  description = "TTL for DNS records in seconds"
+  type        = number
+  default     = 300
+}
+
+variable "mx_records" {
+  description = "MX records for email (format: 'priority mail-server.')"
+  type        = list(string)
+  default     = []
+}
+
+variable "txt_records" {
+  description = "TXT records for domain verification, SPF, DKIM, etc."
+  type        = list(string)
+  default     = []
+}
+
+# Cross-environment IP variables (for DNS when managing from one environment)
+variable "staging_app_ip" {
+  description = "External IP of staging app server (used when managing DNS from production)"
+  type        = string
+  default     = ""
+}
+
+variable "staging_vpn_ip" {
+  description = "External IP of staging VPN server (used when managing DNS from production)"
+  type        = string
+  default     = ""
+}
+
+variable "staging_jenkins_ip" {
+  description = "External IP of staging Jenkins server (used when managing DNS from production)"
+  type        = string
+  default     = ""
 }

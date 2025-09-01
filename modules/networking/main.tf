@@ -33,8 +33,8 @@ resource "google_compute_firewall" "allow_ssh_vpn_only" {
     ports    = ["22"]
   }
 
-  # Only allow SSH from VPN clients and specific admin IPs
-  source_ranges = concat(
+  # Only allow SSH from VPN clients (remove public IPs for staging)
+  source_ranges = var.environment == "staging" ? ["10.8.0.0/24"] : concat(
     ["10.8.0.0/24"], # VPN client subnet
     var.allowed_ssh_ips
   )
