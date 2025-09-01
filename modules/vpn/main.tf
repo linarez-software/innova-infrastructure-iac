@@ -2,14 +2,15 @@ locals {
   vpn_instance_name = "vpn-${var.environment}"
 
   vpn_startup_script = templatefile("${path.module}/templates/openvpn-startup.sh", {
-    vpn_subnet_ip   = "10.8.0.0"
-    vpn_subnet_mask = "255.255.255.0"
-    max_vpn_clients = var.max_vpn_clients
-    vpn_admin_email = var.vpn_admin_email
-    environment     = var.environment
-    internal_subnet = "10.0.0.0/24"
-    project_id      = var.project_id
-    zone            = var.zone
+    vpn_subnet_ip      = "10.8.0.0"
+    vpn_subnet_mask    = "255.255.255.0"
+    max_vpn_clients    = var.max_vpn_clients
+    vpn_admin_email    = var.vpn_admin_email
+    environment        = var.environment
+    internal_subnet_ip = "10.0.0.0"
+    internal_subnet_mask = "255.255.255.0"
+    project_id         = var.project_id
+    zone               = var.zone
   })
 }
 

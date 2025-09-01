@@ -67,7 +67,7 @@ server ${vpn_subnet_ip} ${vpn_subnet_mask}
 ifconfig-pool-persist /var/log/openvpn/ipp.txt
 
 # Route internal network to VPN clients
-push "route ${internal_subnet} 255.255.255.0"
+push "route ${internal_subnet_ip} ${internal_subnet_mask}"
 
 # DNS servers
 push "dhcp-option DNS 8.8.8.8"
