@@ -38,6 +38,16 @@ output "vpn_service_account_id" {
   value       = google_service_account.vpn_service_account.id
 }
 
+output "jenkins_service_account_email" {
+  description = "Email of the Jenkins service account"
+  value       = google_service_account.jenkins_service_account.email
+}
+
+output "jenkins_service_account_id" {
+  description = "ID of the Jenkins service account"
+  value       = google_service_account.jenkins_service_account.id
+}
+
 output "kms_keyring_id" {
   description = "ID of the KMS keyring (production only)"
   value       = var.environment == "production" ? google_kms_key_ring.app_keyring[0].id : ""

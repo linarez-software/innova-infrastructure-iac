@@ -53,14 +53,30 @@ output "ssh_command_vpn" {
   value       = "gcloud compute ssh ${module.vpn.vpn_instance_name} --zone=${var.zone} --project=${var.project_id}"
 }
 
+output "jenkins_info" {
+  description = "Jenkins server information (if enabled)"
+  value = var.enable_jenkins ? {
+    instance_name = module.jenkins[0].jenkins_instance_name
+    internal_ip   = module.jenkins[0].jenkins_internal_ip
+    external_ip   = module.jenkins[0].jenkins_external_ip
+    web_url       = module.jenkins[0].jenkins_web_url
+    ssh_command   = module.jenkins[0].jenkins_ssh_command
+  } : null
+}
+
 output "service_accounts" {
   description = "Service account emails created"
-  value = {
-    app        = module.security.app_service_account_email
-    database   = module.security.db_service_account_email
-    monitoring = module.security.monitoring_service_account_email
-    vpn        = module.security.vpn_service_account_email
-  }
+  value = merge(
+    {
+      app        = module.security.app_service_account_email
+      database   = module.security.db_service_account_email
+      monitoring = module.security.monitoring_service_account_email
+      vpn        = module.security.vpn_service_account_email
+    },
+    var.enable_jenkins ? {
+      jenkins = module.security.jenkins_service_account_email
+    } : {}
+  )
 }
 
 output "firewall_rules" {

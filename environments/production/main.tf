@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.5.0"
-  
+
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -11,7 +11,7 @@ terraform {
       version = "~> 5.0"
     }
   }
-  
+
   backend "gcs" {
     bucket = "deep-wares-246918-terraform-state"
     prefix = "terraform/production"
@@ -36,12 +36,12 @@ locals {
 
 module "production_infrastructure" {
   source = "../../"
-  
-  project_id                    = var.project_id
-  region                        = var.region
-  zone                          = var.zone
-  environment                   = local.environment
-  staging_instance_type         = "e2-standard-2"
+
+  project_id                   = var.project_id
+  region                       = var.region
+  zone                         = var.zone
+  environment                  = local.environment
+  staging_instance_type        = "e2-standard-2"
   production_app_instance_type = var.production_app_instance_type
   production_db_instance_type  = var.production_db_instance_type
   allowed_ssh_ips              = var.allowed_ssh_ips
@@ -52,7 +52,7 @@ module "production_infrastructure" {
   enable_backups               = var.enable_backups
   backup_retention_days        = var.backup_retention_days
   postgresql_version           = var.postgresql_version
-  
+
   labels = merge(
     var.labels,
     {

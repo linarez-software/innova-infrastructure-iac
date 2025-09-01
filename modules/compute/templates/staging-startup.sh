@@ -94,11 +94,108 @@ EOF
 # Restart PostgreSQL with new configuration
 systemctl restart postgresql
 
+# Install Docker for Mailhog and pgAdmin
+echo "Installing Docker..."
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+systemctl enable docker
+systemctl start docker
+
+# Add www-data user to docker group
+usermod -aG docker www-data
+
+# Install Docker Compose
+echo "Installing Docker Compose..."
+curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
+# Create directory for development tools
+mkdir -p /opt/dev-tools
+cd /opt/dev-tools
+
+# Create Docker Compose configuration for Mailhog and pgAdmin
+cat > docker-compose.yml <<EOF
+version: '3.8'
+
+services:
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog-staging
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
+    restart: unless-stopped
+    environment:
+      - MH_STORAGE=maildir
+      - MH_MAILDIR_PATH=/home/mailhog
+    volumes:
+      - mailhog-data:/home/mailhog
+    networks:
+      - dev-tools
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin-staging
+    ports:
+      - "5050:80"    # Web UI port
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${pgadmin_email != "" ? pgadmin_email : "admin@staging.local"}
+      - PGADMIN_DEFAULT_PASSWORD=${pgadmin_password != "" ? pgadmin_password : db_password}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - dev-tools
+    depends_on:
+      - mailhog
+
+volumes:
+  mailhog-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+
+networks:
+  dev-tools:
+    driver: bridge
+EOF
+
+echo "Starting development tools (Mailhog and pgAdmin)..."
+docker-compose up -d
+
+# Wait for services to start
+sleep 10
+
+# Configure pgAdmin with database connection
+echo "Configuring pgAdmin database connection..."
+cat > /tmp/pgadmin_servers.json <<EOF
+{
+  "Servers": {
+    "1": {
+      "Name": "Staging PostgreSQL",
+      "Group": "Servers",
+      "Host": "host.docker.internal",
+      "Port": 5432,
+      "MaintenanceDB": "appdb",
+      "Username": "postgres",
+      "UseSSHTunnel": 0,
+      "TunnelPort": 22,
+      "TunnelAuthentication": 0
+    }
+  }
+}
+EOF
+
+# Copy server configuration to pgAdmin container (will be picked up on restart)
+docker cp /tmp/pgadmin_servers.json pgadmin-staging:/pgadmin4/servers.json || echo "pgAdmin config will be manual"
+
 # Install and configure NGINX
 echo "Installing and configuring NGINX..."
 apt-get install -y nginx
 
-# Create basic NGINX configuration for staging
+# Create basic NGINX configuration for staging with dev tools
 cat > /etc/nginx/sites-available/app <<'EOF'
 server {
     listen 80;
@@ -115,6 +212,25 @@ server {
         expires 1h;
     }
     
+    # Mailhog web interface
+    location /mailhog/ {
+        proxy_pass http://localhost:8025/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # pgAdmin web interface
+    location /pgadmin/ {
+        proxy_pass http://localhost:5050/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Script-Name /pgadmin;
+    }
+    
     # Health check endpoint
     location /health {
         access_log off;
@@ -122,9 +238,31 @@ server {
         add_header Content-Type text/plain;
     }
     
+    # Development tools status page
+    location /dev-tools {
+        return 200 '<!DOCTYPE html>
+<html>
+<head><title>Staging Development Tools</title></head>
+<body>
+    <h1>Staging Development Tools</h1>
+    <ul>
+        <li><a href="/mailhog/">Mailhog (Email Testing)</a> - Port 8025</li>
+        <li><a href="/pgadmin/">pgAdmin (Database Admin)</a> - Port 5050</li>
+    </ul>
+    <p>Direct access:</p>
+    <ul>
+        <li>Mailhog: <a href="http://YOUR_IP:8025">http://YOUR_IP:8025</a></li>
+        <li>pgAdmin: <a href="http://YOUR_IP:5050">http://YOUR_IP:5050</a></li>
+        <li>SMTP Server: localhost:1025</li>
+    </ul>
+</body>
+</html>';
+        add_header Content-Type text/html;
+    }
+    
     # Default location for application
     location / {
-        return 503 "Application not configured";
+        return 503 "Application not configured - Visit /dev-tools for development tools";
     }
 }
 EOF
@@ -149,6 +287,9 @@ ufw --force enable
 ufw allow ssh
 ufw allow http
 ufw allow https
+ufw allow 8025  # Mailhog web interface
+ufw allow 5050  # pgAdmin web interface
+ufw allow 1025  # SMTP port for Mailhog
 
 # Create performance monitoring script for staging
 mkdir -p /opt/scripts
@@ -172,6 +313,9 @@ echo ""
 echo "=== Service Status ==="
 echo "NGINX: $(systemctl is-active nginx)"
 echo "PostgreSQL: $(systemctl is-active postgresql)"
+echo "Docker: $(systemctl is-active docker)"
+echo "Mailhog Container: $(docker ps --format 'table {{.Names}}\t{{.Status}}' | grep mailhog-staging | awk '{print $2}' || echo 'Not Running')"
+echo "pgAdmin Container: $(docker ps --format 'table {{.Names}}\t{{.Status}}' | grep pgadmin-staging | awk '{print $2}' || echo 'Not Running')"
 echo ""
 
 echo "=== Database Status ==="
@@ -266,11 +410,28 @@ echo "Services configured:"
 echo "- PostgreSQL: Running on localhost:5432"
 echo "- NGINX: Running on port 80"
 echo "- Database: 'appdb' created and ready"
+echo "- Docker: Running development tools"
+echo "- Mailhog: Running on port 8025 (SMTP on 1025)"
+echo "- pgAdmin: Running on port 5050"
+echo ""
+echo "Development Tools Access:"
+echo "- Development Tools Page: http://YOUR_IP/dev-tools"
+echo "- Mailhog Web UI: http://YOUR_IP:8025 or http://YOUR_IP/mailhog/"
+echo "- pgAdmin Web UI: http://YOUR_IP:5050 or http://YOUR_IP/pgadmin/"
+echo "- SMTP Server: localhost:1025 (for testing email)"
+echo ""
+echo "Database Connection (for pgAdmin):"
+echo "- Host: host.docker.internal (from containers) or localhost"
+echo "- Port: 5432"
+echo "- Database: appdb"
+echo "- Username: postgres"
+echo "- Password: [db_password configured in terraform]"
 echo ""
 echo "Storage locations:"
 echo "- Application data: /opt/app-data/"
 echo "- Static files: /var/www/static/"
 echo "- Logs: /opt/app-data/logs/"
+echo "- Development tools: /opt/dev-tools/"
 echo ""
 echo "Management scripts:"
 echo "- Monitor: /opt/scripts/staging-monitor.sh"
@@ -280,4 +441,5 @@ echo "Next steps:"
 echo "1. Configure your application to connect to PostgreSQL"
 echo "2. Update NGINX configuration for your specific application"
 echo "3. Deploy your application code"
-echo "4. Test the staging environment"
+echo "4. Configure email settings to use Mailhog SMTP (localhost:1025)"
+echo "5. Test the staging environment and development tools"

@@ -31,10 +31,10 @@ output "vpn_configs_bucket" {
 output "vpn_connection_info" {
   description = "VPN connection information"
   value = {
-    server_ip      = google_compute_address.vpn_static_ip.address
-    server_port    = 1194
-    protocol       = "udp"
-    client_subnet  = var.vpn_subnet_cidr
-    max_clients    = var.max_vpn_clients
+    server_ip     = google_compute_address.vpn_static_ip.address
+    server_port   = 1194
+    protocol      = "udp"
+    client_subnet = var.vpn_subnet_cidr
+    max_clients   = var.max_vpn_clients
   }
 }

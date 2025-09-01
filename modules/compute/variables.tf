@@ -80,6 +80,19 @@ variable "postgresql_version" {
   default     = "15"
 }
 
+variable "pgadmin_email" {
+  description = "pgAdmin default admin email"
+  type        = string
+  default     = "admin@staging.local"
+}
+
+variable "pgadmin_password" {
+  description = "pgAdmin default admin password"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "labels" {
   description = "Labels to apply"
   type        = map(string)

@@ -67,6 +67,19 @@ variable "db_password" {
   default     = ""
 }
 
+variable "pgadmin_email" {
+  description = "Default email for pgAdmin admin user (staging only)"
+  type        = string
+  default     = "admin@staging.local"
+}
+
+variable "pgadmin_password" {
+  description = "Default password for pgAdmin admin user (uses db_password if empty, staging only)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "enable_monitoring" {
   description = "Enable GCP monitoring and logging"
   type        = bool
@@ -89,6 +102,78 @@ variable "postgresql_version" {
   description = "PostgreSQL version to install"
   type        = string
   default     = "15"
+}
+
+# Jenkins Configuration Variables
+variable "enable_jenkins" {
+  description = "Enable Jenkins CI/CD server deployment"
+  type        = bool
+  default     = true
+}
+
+variable "jenkins_instance_type" {
+  description = "Instance type for Jenkins server"
+  type        = string
+  default     = "e2-standard-4"
+}
+
+variable "jenkins_data_disk_size" {
+  description = "Size of the persistent disk for Jenkins data (GB)"
+  type        = number
+  default     = 100
+}
+
+variable "jenkins_admin_user" {
+  description = "Jenkins admin username"
+  type        = string
+  default     = "admin"
+}
+
+variable "jenkins_admin_password" {
+  description = "Jenkins admin password"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "jenkins_domain" {
+  description = "Domain name for Jenkins (optional, for SSL setup)"
+  type        = string
+  default     = ""
+}
+
+variable "jenkins_ssh_public_key" {
+  description = "SSH public key for Jenkins user access"
+  type        = string
+  default     = ""
+}
+
+variable "github_token_secret" {
+  description = "GitHub personal access token for repository access"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "docker_registry_secret" {
+  description = "Docker registry credentials"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "staging_deploy_key_secret" {
+  description = "SSH deploy key for staging environment"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "prod_deploy_key_secret" {
+  description = "SSH deploy key for production environment"
+  type        = string
+  sensitive   = true
+  default     = ""
 }
 
 variable "labels" {

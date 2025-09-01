@@ -18,12 +18,31 @@ ssl_email   = ""  # Required if domain_name is set
 # Database Configuration
 db_password = "your-secure-db-password"  # Change this!
 
+# Development Tools Configuration
+pgadmin_email    = "admin@staging.local"     # pgAdmin default admin email
+pgadmin_password = ""                        # Leave empty to use db_password
+
 # Application Versions
 postgresql_version = "15"
 
 # Monitoring and Backup
 enable_monitoring = true
 enable_backups    = false  # Disabled for staging to save costs
+
+# Jenkins CI/CD Configuration (shared between staging and production)
+enable_jenkins           = false  # Only enable in one environment to avoid conflicts
+jenkins_instance_type    = "e2-standard-2"  # Smaller for staging cost optimization
+jenkins_data_disk_size   = 50               # Smaller disk for staging
+jenkins_admin_user       = "admin"          # Jenkins admin username
+jenkins_admin_password   = ""               # Set in production environment only
+jenkins_domain          = ""                # Optional Jenkins domain
+jenkins_ssh_public_key  = ""                # SSH key for Jenkins access (optional)
+
+# CI/CD Integration Secrets (typically configured in production only)
+github_token_secret        = ""  # GitHub Personal Access Token
+docker_registry_secret     = ""  # Docker registry credentials
+staging_deploy_key_secret  = ""  # SSH key for staging deployments
+prod_deploy_key_secret     = ""  # SSH key for production deployments
 
 # Resource Labels
 labels = {

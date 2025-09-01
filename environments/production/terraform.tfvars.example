@@ -29,6 +29,21 @@ enable_monitoring     = true  # Required for production monitoring
 enable_backups       = true  # Required for data protection
 backup_retention_days = 30   # 30-day backup retention
 
+# Jenkins CI/CD Configuration
+enable_jenkins           = true                       # Enable Jenkins server
+jenkins_instance_type    = "e2-standard-4"           # 4 vCPUs, 16 GB RAM
+jenkins_data_disk_size   = 100                       # 100 GB persistent disk
+jenkins_admin_user       = "admin"                   # Jenkins admin username
+jenkins_admin_password   = "YourJenkinsPassword123!" # Change this password!
+jenkins_domain          = "jenkins.your-domain.com"  # Jenkins subdomain (optional)
+jenkins_ssh_public_key  = ""                         # SSH key for Jenkins access (optional)
+
+# CI/CD Integration Secrets (optional - set if using automated deployments)
+github_token_secret        = ""  # GitHub Personal Access Token
+docker_registry_secret     = ""  # Docker registry credentials
+staging_deploy_key_secret  = ""  # SSH key for staging deployments
+prod_deploy_key_secret     = ""  # SSH key for production deployments
+
 # Resource Labels
 labels = {
   managed_by   = "terraform"

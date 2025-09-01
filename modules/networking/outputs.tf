@@ -40,7 +40,7 @@ output "static_ip_address" {
 
 output "firewall_rules" {
   description = "List of firewall rules created"
-  value = [
+  value = concat([
     google_compute_firewall.allow_ssh_vpn_only.name,
     google_compute_firewall.allow_vpn_server.name,
     google_compute_firewall.allow_http_https.name,
@@ -49,5 +49,9 @@ output "firewall_rules" {
     google_compute_firewall.allow_internal_redis.name,
     google_compute_firewall.allow_internal.name,
     google_compute_firewall.deny_all.name
-  ]
+    ],
+    var.environment == "staging" ? [
+      google_compute_firewall.allow_dev_tools[0].name,
+      google_compute_firewall.allow_smtp[0].name
+  ] : [])
 }

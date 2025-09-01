@@ -17,7 +17,7 @@ variable "production_app_instance_type" {
   description = "Instance type for production application server (optimized for performance)"
   type        = string
   default     = "c4-standard-4-lssd"
-  
+
   validation {
     condition = contains([
       "c4-standard-4-lssd",
@@ -33,7 +33,7 @@ variable "production_db_instance_type" {
   description = "Instance type for production database server (optimized for memory)"
   type        = string
   default     = "n2-highmem-4"
-  
+
   validation {
     condition = contains([
       "n2-highmem-4",
@@ -49,7 +49,7 @@ variable "allowed_ssh_ips" {
   description = "List of IP ranges allowed to SSH into instances"
   type        = list(string)
   default     = []
-  
+
   validation {
     condition     = length(var.allowed_ssh_ips) > 0
     error_message = "SSH access must be restricted to specific IP ranges in production."
@@ -65,7 +65,7 @@ variable "domain_name" {
 variable "ssl_email" {
   description = "Email address for monitoring alerts"
   type        = string
-  
+
   validation {
     condition     = can(regex("^[\\w\\.-]+@[\\w\\.-]+\\.[a-zA-Z]{2,}$", var.ssl_email))
     error_message = "Valid email address is required for monitoring alerts."
@@ -76,7 +76,7 @@ variable "db_password" {
   description = "PostgreSQL database password for production"
   type        = string
   sensitive   = true
-  
+
   validation {
     condition     = length(var.db_password) >= 12
     error_message = "Production database password must be at least 12 characters long."
@@ -99,7 +99,7 @@ variable "backup_retention_days" {
   description = "Number of days to retain backups"
   type        = number
   default     = 30
-  
+
   validation {
     condition     = var.backup_retention_days >= 7
     error_message = "Backup retention must be at least 7 days for production."

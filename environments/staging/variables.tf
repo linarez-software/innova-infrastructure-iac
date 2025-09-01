@@ -47,6 +47,19 @@ variable "db_password" {
   default     = "staging-db-2024"
 }
 
+variable "pgadmin_email" {
+  description = "Default email for pgAdmin admin user"
+  type        = string
+  default     = "admin@staging.local"
+}
+
+variable "pgadmin_password" {
+  description = "Default password for pgAdmin admin user (uses db_password if not set)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "enable_monitoring" {
   description = "Enable GCP monitoring and logging"
   type        = bool
