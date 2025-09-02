@@ -107,10 +107,20 @@ EOF
 mkdir -p /var/log/openvpn
 chown nobody:nogroup /var/log/openvpn
 
-# Configure iptables for NAT
+# Configure iptables for NAT and VPN routing
+# Allow VPN clients to access internal network (10.0.0.0/24)
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -d 10.0.0.0/24 -j ACCEPT
 iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o ens4 -j MASQUERADE
+
+# Allow VPN traffic
 iptables -A INPUT -i tun+ -j ACCEPT
 iptables -A FORWARD -i tun+ -j ACCEPT
+
+# Allow VPN clients to reach internal network
+iptables -A FORWARD -i tun+ -d 10.0.0.0/24 -j ACCEPT
+iptables -A FORWARD -s 10.0.0.0/24 -o tun+ -j ACCEPT
+
+# Standard forwarding rules
 iptables -A FORWARD -i tun+ -o ens4 -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A FORWARD -i ens4 -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 
