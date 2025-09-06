@@ -43,17 +43,33 @@ terraform apply
 
 ### VPN Management
 ```bash
-# Add new VPN user
-./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production add username
+# Enhanced VPN user creation (with SSH key management)
+./scripts/create-vpn-user.sh USERNAME [SSH_PUBLIC_KEY_PATH]
+# Example: ./scripts/create-vpn-user.sh john ~/.ssh/id_rsa.pub
 
-# List active VPN connections
-./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production list
+# Alternative: Generate VPN client configuration only
+./scripts/generate-vpn-client.sh PROJECT_ID ZONE USERNAME
 
-# Revoke VPN access
-./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production revoke username
+# Manual VPN user management (on VPN server)
+gcloud compute ssh vpn-staging --zone=us-central1-a --command="sudo /opt/scripts/manage-vpn-users.sh add USERNAME"
 
-# Download existing client config
-./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production download username
+# Add SSH key to existing VPN user
+gcloud compute ssh vpn-staging --zone=us-central1-a --command="sudo /opt/scripts/manage-vpn-users.sh add-ssh-key USERNAME 'ssh-rsa AAAAB...'"
+
+# List active VPN connections and SSH users
+gcloud compute ssh vpn-staging --zone=us-central1-a --command="sudo /opt/scripts/manage-vpn-users.sh list"
+
+# List all VPN and SSH users
+gcloud compute ssh vpn-staging --zone=us-central1-a --command="sudo /opt/scripts/manage-vpn-users.sh list-users"
+
+# Revoke VPN and SSH access
+gcloud compute ssh vpn-staging --zone=us-central1-a --command="sudo /opt/scripts/manage-vpn-users.sh revoke USERNAME"
+
+# Download VPN configuration
+gcloud compute scp vpn-staging:/opt/vpn-configs/USERNAME.ovpn . --zone=us-central1-a
+
+# Monitor VPN status
+gcloud compute ssh vpn-staging --zone=us-central1-a --command="sudo /opt/scripts/vpn-monitor.sh"
 ```
 
 ### SSL Certificate Setup
@@ -62,12 +78,21 @@ terraform apply
 sudo ./scripts/setup-ssl.sh -d your-domain.com -e admin@your-domain.com
 ```
 
-### SSH Access (VPN Required)
+### SSH Access
 ```bash
-# Connect to instances (must be connected to VPN first)
-gcloud compute ssh app-production --zone=us-central1-a
-gcloud compute ssh db-production --zone=us-central1-a
-gcloud compute ssh vpn-production --zone=us-central1-a
+# SSH to VPN server (requires project-level SSH keys configured)
+gcloud compute ssh vpn-staging --zone=us-central1-a
+
+# SSH to internal servers (requires VPN connection first)
+# After connecting to VPN, use internal IPs:
+ssh username@10.0.0.3  # App server staging
+ssh username@10.0.0.4  # Jenkins server (if deployed)
+
+# Alternative: Use gcloud with --internal-ip (requires VPN connection)
+gcloud compute ssh app-staging --zone=us-central1-a --internal-ip
+
+# Configure SSH keys for project
+gcloud compute project-info add-metadata --metadata-from-file ssh-keys=~/.ssh/id_rsa.pub
 ```
 
 ### NVMe Optimization
@@ -118,7 +143,8 @@ The project uses a modular Terraform architecture with the following key modules
 - **modules/compute/templates/production-app-startup.sh**: Contains NVMe optimization, NGINX setup, and performance tuning
 - **modules/compute/templates/production-db-startup.sh**: PostgreSQL optimization for high-performance workloads
 - **modules/compute/templates/staging-startup.sh**: Combined app and database setup for development
-- **modules/vpn/templates/openvpn-startup.sh**: OpenVPN server setup and certificate management
+- **modules/vpn/templates/openvpn-startup.sh**: OpenVPN server setup, certificate management, and SSH key integration
+- **scripts/create-vpn-user.sh**: Enhanced VPN user creation with automatic SSH key management
 
 ### Performance Optimizations
 

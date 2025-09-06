@@ -1,6 +1,10 @@
-# Innova Infrastructure as Code (IaC)
+# Innova Infrastructure as Code
 
-Terraform-based **generic application infrastructure platform** for **Google Cloud Platform (GCP)** with secure VPN-only administrative access. Deploy any web application with PostgreSQL backend in staging or production environments.
+## Overview
+
+This is a comprehensive Terraform Infrastructure as Code (IaC) project for deploying scalable application infrastructure on Google Cloud Platform. The infrastructure supports secure, cost-optimized environments with VPN-based administration and follows a documentation-first development approach.
+
+**Key Features**: Secure VPN-only access, automated deployment, production-ready architecture, comprehensive monitoring, and cost optimization.
 
 ## 🏗️ Architecture Overview
 
@@ -25,6 +29,69 @@ This project provides a complete IaC solution for deploying application infrastr
 - **Zero External Access**: SSH and database access only via VPN
 - **5 VPN Users Maximum**: Cost-optimized for small teams
 - **Public Access**: Only HTTPS (443) and HTTP (80) for application interface
+
+## 🌐 Network Architecture
+
+```mermaid
+graph TB
+    subgraph Internet["🌐 Internet"]
+        USER[👤 Users]
+        DEV[👨‍💻 Developers]
+    end
+    
+    subgraph GCP["☁️ Google Cloud Platform"]
+        subgraph VPC["🏠 VPC staging-vpc (10.0.0.0/24)"]
+            
+            subgraph VPN_ZONE["🔒 VPN Security Zone"]
+                VPN_SERVER["🔐 VPN Server<br/>vpn-staging<br/>10.0.0.2<br/>e2-micro"]
+            end
+            
+            subgraph APP_ZONE["🚀 Application Zone"]
+                APP_SERVER["🖥️ App Server<br/>app-staging<br/>10.0.0.3<br/>e2-standard-2"]
+            end
+            
+            subgraph CICD_ZONE["⚙️ CI/CD Zone"]
+                JENKINS["🔧 Jenkins Server<br/>jenkins-staging<br/>10.0.0.4<br/>e2-small"]
+            end
+        end
+        
+        subgraph SERVICES["☁️ GCP Services"]
+            GCS["📦 Cloud Storage"]
+            MONITORING["📊 Monitoring"]
+            IAM["🔑 IAM"]
+        end
+    end
+    
+    USER --> APP_SERVER
+    DEV --> VPN_SERVER
+    VPN_SERVER -.-> APP_SERVER
+    VPN_SERVER -.-> JENKINS
+    APP_SERVER --> GCS
+    JENKINS -.-> APP_SERVER
+```
+
+## 🛠️ Current Infrastructure Status
+
+### Staging Environment (Deployed)
+
+| Component | Instance | Internal IP | External IP | Status | Purpose |
+|-----------|----------|-------------|-------------|--------|---------|
+| **VPN Server** | vpn-staging | 10.0.0.2 | Public | ✅ Running | OpenVPN access point |
+| **App Server** | app-staging | 10.0.0.3 | Public | ✅ Running | Odoo, PostgreSQL, Redis, NGINX |
+| **Jenkins** | jenkins-staging | 10.0.0.4 | Public | ✅ Running | CI/CD, Mailhog, pgAdmin |
+
+### Services and Ports
+
+| Service | Port | Access | Description |
+|---------|------|--------|-------------|
+| **Web Application** | 80, 443 | Public | Main application (HTTPS redirects) |
+| **OpenVPN** | 1194 | Public | VPN server access |
+| **SSH** | 22 | VPN Only | Server administration |
+| **PostgreSQL** | 5432 | Internal | Database access |
+| **Redis** | 6379 | Internal | Cache and sessions |
+| **Jenkins** | 8080 | VPN Only | CI/CD web interface |
+| **Mailhog** | 8025 | VPN Only | Email testing |
+| **pgAdmin** | 5050 | VPN Only | Database management |
 
 ## 🚀 Quick Start
 
@@ -131,15 +198,27 @@ backup_retention_days       = 30                    # Keep backups for 30 days
 ### Network Security
 - **VPC with custom subnets** and firewall rules
 - **VPN-only SSH access** (10.8.0.0/24 subnet)
-- **No external admin access** except via VPN
+- **Zero Trust Architecture**: No external admin access except via VPN
 - **Internal-only** database communication (port 5432)
 - **SSL/TLS encryption** with Let's Encrypt
 - **OpenVPN server** with certificate-based authentication
 
+### Firewall Rules (Staging)
+
+| Rule | Ports | Source | Target | Purpose |
+|------|-------|--------|--------|---------|
+| `staging-allow-http-https` | 80, 443 | 0.0.0.0/0 | web-server | Public web access |
+| `staging-allow-vpn-server` | 1194 | 0.0.0.0/0 | vpn-server | VPN connections |
+| `staging-allow-ssh-vpn-only` | 22 | 10.8.0.0/24 | ssh-server | SSH via VPN only |
+| `staging-allow-jenkins-web` | 8080 | 10.8.0.0/24 | jenkins-server | Jenkins UI |
+| `staging-allow-dev-tools` | 8025, 5050 | 10.8.0.0/24 | dev-tools | Development tools |
+| `staging-allow-internal` | All | 10.0.0.0/24 | All | Internal communication |
+| `staging-allow-vpn-clients` | All | 10.8.0.0/24 | All | VPN client access |
+
 ### Access Control
 - **Service accounts** with least-privilege IAM roles
-- **KMS encryption** for production secrets
-- **Audit logging** enabled
+- **Project-level SSH keys**: Centralized SSH key management via GCP metadata
+- **Certificate-based VPN**: PKI infrastructure with Easy-RSA
 - **OS Login** for SSH key management
 
 ### Data Protection  
@@ -230,29 +309,71 @@ vpn_config_bucket = "PROJECT_ID-production-vpn-configs"
 
 ## 🔍 Useful Commands
 
-### VPN Management (Required for SSH Access)
+## 🔐 VPN Management & SSH Access
+
+### Enhanced VPN User Creation
 ```bash
-# Add new VPN user
-./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production add username
+# Complete VPN user setup with SSH key management (recommended)
+./scripts/create-vpn-user.sh USERNAME [SSH_PUBLIC_KEY_PATH]
+./scripts/create-vpn-user.sh john ~/.ssh/id_rsa.pub
 
-# List active VPN connections
-./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production list
+# Deploy SSH keys to all servers at once
+./scripts/deploy-ssh-key-to-all.sh USERNAME [SSH_KEY_PATH]
 
-# Revoke VPN access
-./scripts/setup-vpn-client.sh -p PROJECT_ID -z us-central1-a -e production revoke username
-
-# Download VPN configuration from GCS
-gsutil cp gs://PROJECT_ID-production-vpn-configs/username.ovpn ./
+# Alternative: Generate VPN configuration only
+./scripts/generate-vpn-client.sh PROJECT_ID ZONE USERNAME
 ```
 
-### Instance Access (VPN Required)
+### VPN Server Management
 ```bash
-# SSH to instances (must be connected to VPN first)
-gcloud compute ssh app-production --zone=us-central1-a
-gcloud compute ssh db-production --zone=us-central1-a
+# Add VPN user with SSH access
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/manage-vpn-users.sh add john"
 
-# Use IAP tunnel if configured (alternative to VPN)
-gcloud compute ssh app-production --zone=us-central1-a --tunnel-through-iap
+# Add SSH key to existing VPN user
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/manage-vpn-users.sh add-ssh-key john 'ssh-rsa AAAAB...'"
+
+# List all users and their access status
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/manage-vpn-users.sh list-users"
+
+# Revoke VPN and SSH access
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/manage-vpn-users.sh revoke john"
+
+# Monitor VPN status and connections
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/vpn-monitor.sh"
+```
+
+### SSH Access
+```bash
+# Direct SSH to VPN server (public access)
+gcloud compute ssh vpn-staging --zone=us-central1-a
+
+# SSH to internal servers (requires VPN connection first)
+ssh username@10.0.0.3  # App server
+ssh username@10.0.0.4  # Jenkins server
+
+# Alternative using gcloud (requires VPN connection for internal IPs)
+gcloud compute ssh app-staging --zone=us-central1-a --internal-ip
+gcloud compute ssh jenkins-staging --zone=us-central1-a --internal-ip
+```
+
+### SSH Key Management
+```bash
+# Add SSH key to project metadata (affects all servers)
+gcloud compute project-info add-metadata --metadata-from-file ssh-keys=~/.ssh/id_rsa.pub
+
+# Test SSH access to all servers
+./environments/staging/test-ssh-access.sh
+
+# Troubleshoot SSH access issues
+# 1. Ensure VPN is connected
+# 2. Check SSH agent has key loaded: ssh-add -l
+# 3. Try with explicit key: ssh -i ~/.ssh/id_rsa username@10.0.0.3
+# 4. Check verbose output: ssh -vv username@10.0.0.3
 ```
 
 ### Application Management
@@ -321,18 +442,50 @@ sudo dmesg -T
 ✅ **Automated backups** with retention policies  
 ✅ **Infrastructure as Code** with Terraform modules  
 
-## 🏗️ Module Structure
+## 🏗️ Project Structure
 
-The infrastructure is organized into reusable Terraform modules:
+The infrastructure is organized into reusable Terraform modules and management scripts:
 
 ```
-modules/
-├── networking/     # VPC, subnets, firewall rules, static IPs
-├── compute/        # VM instances, startup scripts, boot disks
-├── database/       # PostgreSQL setup, backups, storage policies
-├── security/       # Service accounts, IAM roles, KMS encryption
-├── monitoring/     # Cloud Monitoring dashboards, alert policies
-└── vpn/           # OpenVPN server, client management scripts
+├── modules/
+│   ├── networking/          # VPC, subnets, firewall rules
+│   ├── compute/            # VM instances and configurations  
+│   ├── security/           # IAM, service accounts, encryption
+│   ├── vpn/               # OpenVPN server setup
+│   ├── database/          # PostgreSQL configurations
+│   └── monitoring/        # Cloud Monitoring setup
+├── environments/
+│   ├── staging/           # Staging environment config
+│   └── production/        # Production environment config
+├── scripts/               # Management and deployment scripts
+│   ├── create-vpn-user.sh       # Complete VPN user setup with SSH
+│   ├── deploy-ssh-key-to-all.sh # Deploy SSH keys to all servers
+│   └── generate-vpn-client.sh   # Generate VPN configurations
+└── docs/                 # Architecture and documentation
+```
+
+## 🔧 Management Scripts
+
+### Key Scripts
+- **`scripts/create-vpn-user.sh`**: Complete VPN user setup with SSH keys
+- **`scripts/deploy-ssh-key-to-all.sh`**: Deploy SSH keys to all servers
+- **`scripts/generate-vpn-client.sh`**: Generate VPN configurations  
+- **`environments/staging/test-ssh-access.sh`**: Test SSH connectivity
+- **`environments/staging/update-vpn-management.sh`**: Update VPN server scripts
+
+### Server Management (on VPN server)
+```bash
+# Enhanced user management with SSH integration
+sudo /opt/scripts/manage-vpn-users.sh {add|add-ssh-key|revoke|list|list-users|status}
+
+# VPN monitoring and troubleshooting
+sudo /opt/scripts/vpn-monitor.sh
+
+# Generate client configurations
+sudo /opt/scripts/generate-client-config.sh USERNAME
+
+# Verify VPN installation
+sudo /opt/scripts/verify-vpn.sh
 ```
 
 Each module is independent and can be customized for specific requirements.
@@ -354,14 +507,41 @@ gcloud compute instances stop vpn-production --zone=us-central1-a
 gcloud compute instances start vpn-production --zone=us-central1-a
 ```
 
-#### SSH Access Denied
+#### SSH Access Issues  
 ```bash
-# Ensure VPN is connected first
-# Check firewall rules
-gcloud compute firewall-rules list --filter="name:allow-ssh"
+# Run comprehensive SSH diagnosis
+./environments/staging/test-ssh-access.sh
 
-# Verify IAM permissions
-gcloud projects get-iam-policy PROJECT_ID --flatten="bindings[].members" --filter="bindings.members:user:YOUR_EMAIL"
+# Check SSH key deployment
+gcloud compute ssh SERVER --zone=us-central1-a --internal-ip \
+  --command="sudo ssh-keygen -l -f /home/USERNAME/.ssh/authorized_keys"
+
+# Fix SSH key on specific server
+gcloud compute ssh SERVER --zone=us-central1-a --internal-ip \
+  --command="echo 'ssh-rsa YOUR_PUBLIC_KEY' | sudo tee /home/USERNAME/.ssh/authorized_keys"
+
+# Verify firewall rules allow VPN SSH access  
+gcloud compute firewall-rules list --filter="name:staging-allow-ssh-vpn-only"
+
+# Common SSH troubleshooting steps:
+# 1. Ensure VPN is connected: ping 10.0.0.3
+# 2. Check SSH key fingerprint matches
+# 3. Try verbose SSH: ssh -vv username@10.0.0.3
+# 4. Check SSH agent: ssh-add -l
+```
+
+#### VPN User Management Issues
+```bash
+# Update VPN server management scripts
+./environments/staging/update-vpn-management.sh
+
+# Check VPN server script functionality
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/manage-vpn-users.sh list-users"
+
+# Regenerate VPN client configuration
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/generate-client-config.sh USERNAME"
 ```
 
 #### Terraform State Issues
@@ -388,13 +568,65 @@ gcloud compute firewall-rules list --filter="name:allow-http"
 gcloud compute addresses list
 ```
 
+## 🔄 Development Workflow
+
+### 1. Documentation-First Approach  
+This project follows a documentation-first methodology:
+1. **Document** architecture and requirements
+2. **Create** network diagrams and specifications
+3. **Review** and validate design
+4. **Implement** in staging environment
+5. **Test** and validate functionality
+6. **Deploy** to production when ready
+
+### 2. Infrastructure Changes
+```bash
+# Make changes to Terraform configurations
+# Always test in staging first
+cd environments/staging
+terraform plan
+terraform apply
+
+# Validate functionality works as expected
+# Test VPN access, SSH connectivity, applications
+
+# Deploy to production when ready
+cd ../production
+terraform plan  
+terraform apply
+```
+
+### 3. VPN User Lifecycle
+```bash
+# Add new team member
+./scripts/create-vpn-user.sh newuser ~/.ssh/keys/newuser.pub
+
+# Manage existing users  
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/manage-vpn-users.sh list-users"
+
+# Remove access when needed
+gcloud compute ssh vpn-staging --zone=us-central1-a \
+  --command="sudo /opt/scripts/manage-vpn-users.sh revoke olduser"
+```
+
+### 4. Security Best Practices
+- **VPN Required**: All administrative access requires VPN connection
+- **SSH Keys**: Use strong SSH keys (RSA 4096-bit recommended)
+- **Firewall Rules**: Never expose internal services directly to internet
+- **Regular Updates**: Keep system packages and services updated
+- **Documentation**: Update docs with any infrastructure changes
+
 ## 🤝 Contributing
 
-1. Fork the repository
+1. Fork the repository  
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)  
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Follow the documentation-first approach
+4. Test all changes in staging environment first
+5. Update documentation with any infrastructure changes
+6. Commit changes (`git commit -m 'Add amazing feature'`)
+7. Push to branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
 
 ## 📄 License
 
@@ -406,6 +638,26 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: [Wiki](https://github.com/linarez-software/innova-infrastructure-iac/wiki)
 - **Discussions**: [GitHub Discussions](https://github.com/linarez-software/innova-infrastructure-iac/discussions)
 
+## 📝 Change Log
+
+### Recent Updates (September 2025)
+- **✅ Enhanced VPN Management**: Added SSH key integration and comprehensive user management
+- **✅ Consolidated Documentation**: Created comprehensive README with all project information  
+- **✅ SSH Access Improvements**: Fixed connectivity issues and implemented systematic testing
+- **✅ Jenkins Integration**: Added CI/CD capabilities with dedicated Jenkins server
+- **✅ Security Enhancements**: Implemented zero-trust SSH access and firewall optimization
+- **✅ Management Scripts**: Created automated tools for VPN user creation and SSH key deployment
+- **✅ Cost Optimization**: Removed unnecessary Cloud Router/NAT (~$100/month savings)
+- **✅ Network Architecture**: Implemented comprehensive firewall rules and VPN-only admin access
+
+### Infrastructure Status
+- **🟢 Staging Environment**: Fully deployed and operational
+- **🟡 Production Environment**: Architecture designed, ready for deployment
+- **🟢 VPN System**: Enhanced with SSH key management and user lifecycle tools
+- **🟢 Security**: Zero-trust architecture implemented with comprehensive firewall rules
+
 ---
 
-**Built with ❤️ for scalable GCP deployments**
+**⚡ This infrastructure follows security best practices with VPN-only administrative access and comprehensive firewall protection.**
+
+**Built with ❤️ for scalable, secure GCP deployments**
