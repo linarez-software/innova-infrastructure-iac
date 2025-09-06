@@ -1,14 +1,14 @@
-output "network_id" {
+output "vpc_id" {
   description = "The ID of the VPC network"
   value       = google_compute_network.vpc_network.id
 }
 
-output "network_name" {
+output "vpc_name" {
   description = "The name of the VPC network"
   value       = google_compute_network.vpc_network.name
 }
 
-output "network_self_link" {
+output "vpc_self_link" {
   description = "The self link of the VPC network"
   value       = google_compute_network.vpc_network.self_link
 }
@@ -33,25 +33,34 @@ output "subnet_cidr" {
   value       = google_compute_subnetwork.subnet.ip_cidr_range
 }
 
-output "static_ip_address" {
-  description = "Static external IP address for production"
-  value       = var.environment == "production" ? google_compute_address.app_static_ip[0].address : null
+output "vpn_static_ip" {
+  description = "VPN server static IP address"
+  value       = google_compute_address.vpn_static_ip.address
+}
+
+output "app_static_ip" {
+  description = "Application server static IP address"
+  value       = google_compute_address.app_static_ip.address
+}
+
+output "jenkins_static_ip" {
+  description = "Jenkins server static IP address"
+  value       = length(google_compute_address.jenkins_static_ip) > 0 ? google_compute_address.jenkins_static_ip[0].address : null
 }
 
 output "firewall_rules" {
   description = "List of firewall rules created"
-  value = concat([
-    google_compute_firewall.allow_ssh_vpn_only.name,
-    google_compute_firewall.allow_vpn_server.name,
-    google_compute_firewall.allow_http_https.name,
-    google_compute_firewall.deny_direct_app_ports.name,
-    google_compute_firewall.allow_internal_postgres.name,
-    google_compute_firewall.allow_internal_redis.name,
-    google_compute_firewall.allow_internal.name,
-    google_compute_firewall.deny_all.name
-    ],
-    var.environment == "staging" ? [
-      google_compute_firewall.allow_dev_tools[0].name,
-      google_compute_firewall.allow_smtp[0].name
-  ] : [])
+  value = [
+    google_compute_firewall.staging_allow_iap.name,
+    google_compute_firewall.staging_allow_http_https.name,
+    google_compute_firewall.staging_allow_vpn_server.name,
+    google_compute_firewall.staging_allow_ssh_vpn_only.name,
+    google_compute_firewall.staging_allow_jenkins_web.name,
+    google_compute_firewall.staging_allow_dev_tools.name,
+    google_compute_firewall.staging_allow_internal_subnet.name,
+    google_compute_firewall.staging_allow_vpn_clients.name,
+    google_compute_firewall.staging_allow_postgresql.name,
+    google_compute_firewall.staging_allow_redis.name,
+    google_compute_firewall.staging_deny_direct_app_ports.name
+  ]
 }

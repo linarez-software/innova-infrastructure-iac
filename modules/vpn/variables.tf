@@ -18,30 +18,36 @@ variable "environment" {
   type        = string
 }
 
-variable "network_id" {
-  description = "Network ID"
+variable "instance_name" {
+  description = "Name of the VPN instance"
   type        = string
 }
 
-variable "subnet_id" {
-  description = "Subnet ID"
-  type        = string
-}
-
-variable "vpn_service_account_email" {
-  description = "Service account email for VPN"
-  type        = string
-}
-
-variable "vpn_instance_type" {
-  description = "Instance type for VPN server"
+variable "machine_type" {
+  description = "Machine type for VPN server"
   type        = string
   default     = "e2-micro"
 }
 
-variable "vpn_admin_email" {
-  description = "Admin email for VPN certificates"
+variable "network_name" {
+  description = "Network name"
   type        = string
+}
+
+variable "subnet_name" {
+  description = "Subnet name"
+  type        = string
+}
+
+variable "static_ip" {
+  description = "Static IP address for VPN server"
+  type        = string
+}
+
+variable "service_account_email" {
+  description = "Service account email for VPN server"
+  type        = string
+  default     = null
 }
 
 variable "vpn_subnet_cidr" {
@@ -50,14 +56,14 @@ variable "vpn_subnet_cidr" {
   default     = "10.8.0.0/24"
 }
 
-variable "max_vpn_clients" {
+variable "max_clients" {
   description = "Maximum number of VPN clients"
   type        = number
   default     = 5
 }
 
 variable "labels" {
-  description = "Labels to apply"
+  description = "Labels to apply to resources"
   type        = map(string)
   default     = {}
 }

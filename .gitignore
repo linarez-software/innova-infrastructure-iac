@@ -91,3 +91,11 @@ scripts/output/
 secrets/
 private/
 confidential/
+
+# Service account credentials
+*.json
+sa-*.txt
+terraform-vpn-manager.json
+
+# OpenVPN configuration files
+*.ovpn

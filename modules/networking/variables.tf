@@ -13,7 +13,7 @@ variable "environment" {
   type        = string
 }
 
-variable "network_name" {
+variable "vpc_name" {
   description = "Name of the VPC network"
   type        = string
 }
@@ -29,10 +29,13 @@ variable "subnet_cidr" {
   default     = "10.0.0.0/24"
 }
 
-variable "allowed_ssh_ips" {
-  description = "List of IP ranges allowed to SSH"
-  type        = list(string)
-  default     = []
+variable "static_ips" {
+  description = "Static IP address names"
+  type = object({
+    vpn_ip     = string
+    app_ip     = string
+    jenkins_ip = string
+  })
 }
 
 variable "labels" {

@@ -181,7 +181,7 @@ resource "google_kms_crypto_key" "app_key" {
   rotation_period = "2592000s"
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
@@ -255,4 +255,46 @@ resource "google_project_iam_member" "jenkins_compute_admin" {
   project = var.project_id
   role    = "roles/compute.admin"
   member  = "serviceAccount:${google_service_account.jenkins_service_account.email}"
+}
+
+# OS Login permissions for user access
+resource "google_project_iam_member" "user_os_login" {
+  project = var.project_id
+  role    = "roles/compute.osLogin"
+  member  = "user:elinarezv@gmail.com"
+}
+
+# Note: osLoginExternalUser role is not supported at project level
+# It's typically granted at the organization level for external users
+
+# Enable IAP API
+resource "google_project_service" "iap_api" {
+  project = var.project_id
+  service = "iap.googleapis.com"
+
+  disable_dependent_services = false
+}
+
+resource "google_project_iam_member" "user_iap_tunnel" {
+  project = var.project_id
+  role    = "roles/iap.tunnelResourceAccessor"
+  member  = "user:elinarezv@gmail.com"
+}
+
+resource "google_project_iam_member" "user_compute_instance_admin" {
+  project = var.project_id
+  role    = "roles/compute.instanceAdmin.v1"
+  member  = "user:elinarezv@gmail.com"
+}
+
+resource "google_project_iam_member" "user_compute_admin" {
+  project = var.project_id
+  role    = "roles/compute.admin"
+  member  = "user:elinarezv@gmail.com"
+}
+
+resource "google_project_iam_member" "user_editor" {
+  project = var.project_id
+  role    = "roles/editor"  
+  member  = "user:elinarezv@gmail.com"
 }

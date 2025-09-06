@@ -69,9 +69,13 @@ ifconfig-pool-persist /var/log/openvpn/ipp.txt
 # Route internal network to VPN clients
 push "route ${internal_subnet_ip} ${internal_subnet_mask}"
 
-# DNS servers
+# DNS servers - use Google DNS and internal DNS
 push "dhcp-option DNS 8.8.8.8"
 push "dhcp-option DNS 8.8.4.4"
+push "dhcp-option DNS 169.254.169.254"
+
+# Redirect all traffic through VPN for staging (optional - comment out if not needed)
+# push "redirect-gateway def1 bypass-dhcp"
 
 # Client configuration
 client-to-client
@@ -108,20 +112,22 @@ mkdir -p /var/log/openvpn
 chown nobody:nogroup /var/log/openvpn
 
 # Configure iptables for NAT and VPN routing
-# Allow VPN clients to access internal network (10.0.0.0/24)
-iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -d 10.0.0.0/24 -j ACCEPT
-iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o ens4 -j MASQUERADE
+# Enable NAT for VPN clients to access internal network
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -d ${internal_subnet_ip}/${internal_subnet_mask} -o ens4 -j MASQUERADE
+# Enable NAT for internet access
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 ! -d ${internal_subnet_ip}/${internal_subnet_mask} -o ens4 -j MASQUERADE
 
 # Allow VPN traffic
 iptables -A INPUT -i tun+ -j ACCEPT
 iptables -A FORWARD -i tun+ -j ACCEPT
+iptables -A FORWARD -o tun+ -j ACCEPT
 
 # Allow VPN clients to reach internal network
-iptables -A FORWARD -i tun+ -d 10.0.0.0/24 -j ACCEPT
-iptables -A FORWARD -s 10.0.0.0/24 -o tun+ -j ACCEPT
+iptables -A FORWARD -i tun+ -d ${internal_subnet_ip}/${internal_subnet_mask} -j ACCEPT
+iptables -A FORWARD -s ${internal_subnet_ip}/${internal_subnet_mask} -o tun+ -j ACCEPT
 
-# Standard forwarding rules
-iptables -A FORWARD -i tun+ -o ens4 -m state --state RELATED,ESTABLISHED -j ACCEPT
+# Standard forwarding rules for established connections
+iptables -A FORWARD -i tun+ -o ens4 -j ACCEPT
 iptables -A FORWARD -i ens4 -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 # Save iptables rules

@@ -10,7 +10,7 @@ output "vpn_instance_name" {
 
 output "vpn_external_ip" {
   description = "External IP of VPN server"
-  value       = google_compute_address.vpn_static_ip.address
+  value       = var.static_ip
 }
 
 output "vpn_internal_ip" {
@@ -31,10 +31,10 @@ output "vpn_configs_bucket" {
 output "vpn_connection_info" {
   description = "VPN connection information"
   value = {
-    server_ip     = google_compute_address.vpn_static_ip.address
+    server_ip     = var.static_ip
     server_port   = 1194
     protocol      = "udp"
     client_subnet = var.vpn_subnet_cidr
-    max_clients   = var.max_vpn_clients
+    max_clients   = var.max_clients
   }
 }
